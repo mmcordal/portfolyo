@@ -1,4 +1,6 @@
-### 🔹 Go Build Çıktıları
+# ==============================
+# GO BUILD ÇIKTILARI
+# ==============================
 /bin/
 /build/
 /dist/
@@ -11,54 +13,70 @@
 *.out
 *.coverprofile
 
-### 🔹 Go Modules (GENELDE COMMITLENİR, ama cache edilmesin)
+# ==============================
+# GO MOD CACHE
+# ==============================
 go.work.sum
 
-### 🔹 Vendor (eğer kullanmıyorsan ignore et)
+# ==============================
+# VENDOR (kullanmıyorsan)
+# ==============================
 vendor/
 
-### 🔹 IDE Dosyaları
+# ==============================
+# IDE DOSYALARI (GoLand / VSCode)
+# ==============================
 .idea/
 .vscode/
 *.iml
 
-### 🔹 OS Çöpleri
+# ==============================
+# MAC / WINDOWS ÇÖPLERİ
+# ==============================
 .DS_Store
 Thumbs.db
 
-### 🔹 Log & Temp
+# ==============================
+# LOG & GEÇİCİ DOSYALAR
+# ==============================
 *.log
 *.tmp
 tmp/
 temp/
 
-### 🔹 Environment / Secret Dosyalar
+# ==============================
+# SECRET DOSYALAR
+# ==============================
 .env
 .env.*
-config.yaml
-config.yml
 secrets.json
 
-### 🔹 Test & Coverage
+# Eğer config içinde şifre vs olma ihtimali varsa
+config.yaml
+config.yml
+
+# ==============================
+# TEST & COVERAGE
+# ==============================
 coverage.out
 coverage.html
 
-### 🔹 Generated Files
-*.pdf
-*.xlsx
-*.csv
+# ==============================
+# SENİN PROJEDE ÜRETİLEN DOSYALAR
+# (Excel, PDF, dışa aktarımlar)
+# ==============================
+/exports/
+/reports/
+/output/
 
-### 🔹 Swagger / Docs build (varsa)
-docs/
+# ==============================
+# SWAGGER (generate ediyorsan)
+# ==============================
+docs/swagger/
 swagger.json
 swagger.yaml
 
-### 🔹 Docker (image build cache vs)
-docker-compose.override.yml
-
-### 🔹 Air / Hot reload tools
+# ==============================
+# HOT RELOAD TOOL
+# ==============================
 .air.toml
-
-### 🔹 Binary çıktılar (cmd klasörlerinden)
-cmd/**/main
-cmd/**/app
