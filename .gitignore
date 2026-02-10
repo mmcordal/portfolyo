@@ -1,0 +1,64 @@
+### 🔹 Go Build Çıktıları
+/bin/
+/build/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.coverprofile
+
+### 🔹 Go Modules (GENELDE COMMITLENİR, ama cache edilmesin)
+go.work.sum
+
+### 🔹 Vendor (eğer kullanmıyorsan ignore et)
+vendor/
+
+### 🔹 IDE Dosyaları
+.idea/
+.vscode/
+*.iml
+
+### 🔹 OS Çöpleri
+.DS_Store
+Thumbs.db
+
+### 🔹 Log & Temp
+*.log
+*.tmp
+tmp/
+temp/
+
+### 🔹 Environment / Secret Dosyalar
+.env
+.env.*
+config.yaml
+config.yml
+secrets.json
+
+### 🔹 Test & Coverage
+coverage.out
+coverage.html
+
+### 🔹 Generated Files
+*.pdf
+*.xlsx
+*.csv
+
+### 🔹 Swagger / Docs build (varsa)
+docs/
+swagger.json
+swagger.yaml
+
+### 🔹 Docker (image build cache vs)
+docker-compose.override.yml
+
+### 🔹 Air / Hot reload tools
+.air.toml
+
+### 🔹 Binary çıktılar (cmd klasörlerinden)
+cmd/**/main
+cmd/**/app
