@@ -49,8 +49,8 @@ func (c *Ctx) SuccessResponse(data interface{}, dataCount int, message string) e
 	m := &viewmodel.SuccessResponse{
 		Message:   message,
 		Success:   true,
-		Data:      data,
 		DataCount: dataCount,
+		Data:      data,
 	}
 	err := c.JSON(m)
 	if err != nil {

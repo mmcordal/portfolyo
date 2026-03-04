@@ -81,7 +81,7 @@ func Setup() (*Config, error) {
 	if config.Secret.JWTSecret == "" {
 		config.Secret.JWTSecret = os.Getenv("JWT_SECRET")
 		if config.Secret.JWTSecret == "" {
-			config.Secret.JWTSecret = "default-secret-key" // default value
+			config.Secret.JWTSecret = "default-secret-key"
 		}
 	}
 

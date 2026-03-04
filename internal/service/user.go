@@ -8,6 +8,7 @@ import (
 	"portfolyo/internal/model"
 	"portfolyo/internal/repository"
 	"portfolyo/internal/viewmodel"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -38,14 +39,11 @@ func (s *authService) Register(ctx context.Context, vm *viewmodel.RegisterReques
 		Password: vm.Password,
 	}
 
-	if user == nil {
-		return errors.New("user is nil")
-	}
-
 	if user.Name == "" || user.Surname == "" || user.Email == "" || user.Password == "" {
 		return errors.New("all fields are required")
 	}
 
+	user.Email = strings.ToLower(user.Email)
 	exist, err := s.ur.ExistEmail(ctx, user.Email)
 	if err != nil {
 		return err
@@ -76,6 +74,7 @@ func (s *authService) Login(ctx context.Context, vm viewmodel.LoginRequest) (*vi
 		return nil, errors.New("email and password are required")
 	}
 
+	vm.Email = strings.ToLower(vm.Email)
 	user, err := s.ur.GetByEmail(ctx, vm.Email)
 	if err != nil {
 		return nil, err
@@ -84,7 +83,7 @@ func (s *authService) Login(ctx context.Context, vm viewmodel.LoginRequest) (*vi
 		return nil, errors.New("user not found")
 	}
 
-	if !user.DeletedAt.IsZero() {
+	if user.DeletedAt != nil {
 		return nil, errors.New("user account is deleted")
 	}
 
@@ -113,7 +112,7 @@ func (s *authService) Login(ctx context.Context, vm viewmodel.LoginRequest) (*vi
 }
 
 func (s *authService) GetUserProfile(ctx context.Context, email string) (*viewmodel.UserVM, error) {
-	user, err := s.ur.GetByEmail(ctx, email)
+	user, err := s.ur.GetUserProfile(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -121,13 +120,22 @@ func (s *authService) GetUserProfile(ctx context.Context, email string) (*viewmo
 		return nil, errors.New("user not found")
 	}
 
-	return viewmodel.ToUserVM(user), nil
+	c := &viewmodel.CurrentByAssetType{
+		Asset: "",
+		Price: 0,
+	}
+	vm := viewmodel.ToUserVM(user)
+	vm.UserAssets = viewmodel.ToUserAssetVMs(user.Assets, c)
+	vm.Reminders = viewmodel.ToReminderVMs(user.Reminders)
+
+	return vm, nil
 }
 func (s *authService) UpdateUser(ctx context.Context, email string, vm *viewmodel.UpdateRequest) error {
 	if vm == nil {
 		return errors.New("update request is required")
 	}
 
+	email = strings.ToLower(email)
 	user, err := s.ur.GetByEmail(ctx, email)
 	if err != nil {
 		return err
@@ -142,6 +150,7 @@ func (s *authService) UpdateUser(ctx context.Context, email string, vm *viewmode
 		user.Surname = vm.Surname
 	}
 	if vm.Email != "" {
+		vm.Email = strings.ToLower(vm.Email)
 		exist, err := s.ur.ExistEmail(ctx, vm.Email)
 		if err != nil {
 			return err
@@ -159,10 +168,12 @@ func (s *authService) UpdateUser(ctx context.Context, email string, vm *viewmode
 		user.Password = string(hashed)
 	}
 
+	user.UpdatedAt = time.Now()
 	return s.ur.Update(ctx, user)
 }
 
 func (s *authService) DeleteUser(ctx context.Context, email string) error {
+	email = strings.ToLower(email)
 	user, err := s.ur.GetByEmail(ctx, email)
 	if err != nil {
 		return err

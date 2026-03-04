@@ -5,11 +5,11 @@ import "github.com/uptrace/bun"
 type AssetType string
 
 const (
-	AssetTypeTurkLirasi       AssetType = "TRY"
-	AssetTypeDolar            AssetType = "USD"
-	AssetTypeSterlin          AssetType = "GBP"
-	AssetTypeEuro             AssetType = "EUR"
-	AssetTypeFrank            AssetType = "CHF"
+	AssetTypeTurkLirasi       AssetType = "try"
+	AssetTypeDolar            AssetType = "usd"
+	AssetTypeSterlin          AssetType = "gbp"
+	AssetTypeEuro             AssetType = "eur"
+	AssetTypeFrank            AssetType = "chf"
 	AssetTypeCeyrekAltin      AssetType = "ceyrek-altin"
 	AssetTypeYarimAltin       AssetType = "yarim-altin"
 	AssetTypeTamAltin         AssetType = "tam-altin"
@@ -23,9 +23,12 @@ const (
 )
 
 type UserAsset struct {
-	bun.BaseModel `bun:"user_asset,alias:ua"`
+	bun.BaseModel `bun:"table:user_assets,alias:ua"`
 	CoreModel
-	UserID int64     `json:"user_id" bun:"type:bigint,notnull"`
-	Asset  AssetType `json:"asset" bun:"type:varchar(255),notnull"`
-	Amount float64   `json:"amount"`
+
+	UserID       int64          `bun:",notnull,unique:idx_user_asset"`
+	User         *User          `bun:"rel:belongs-to,join:user_id=id"`
+	Asset        AssetType      `bun:",type:varchar(50),notnull,unique:idx_user_asset"`
+	Amount       float64        `bun:",notnull"`
+	Transactions []*Transaction `bun:"rel:has-many,join:id=asset_id"`
 }

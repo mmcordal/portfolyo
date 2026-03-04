@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"portfolyo/internal/model"
 
 	"github.com/uptrace/bun"
@@ -12,6 +14,7 @@ type UserRepository interface {
 	Update(ctx context.Context, user *model.User) error
 	Delete(ctx context.Context, user *model.User) error
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
+	GetUserProfile(ctx context.Context, email string) (*model.User, error)
 	ExistEmail(ctx context.Context, email string) (bool, error)
 }
 
@@ -34,7 +37,11 @@ func (r *userRepository) Update(ctx context.Context, user *model.User) error {
 }
 
 func (r *userRepository) Delete(ctx context.Context, user *model.User) error {
-	_, err := r.db.NewDelete().Model(user).WherePK().Exec(ctx)
+	_, err := r.db.NewUpdate().
+		Model(user).
+		Set("deleted_at = now()").
+		WherePK().
+		Exec(ctx)
 	return err
 }
 
@@ -46,6 +53,33 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.U
 		Where("email = ?", email).
 		Scan(ctx)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *userRepository) GetUserProfile(ctx context.Context, email string) (*model.User, error) {
+	user := new(model.User)
+
+	err := r.db.NewSelect().
+		Model(user).
+		Where("email = ?", email).
+		Relation("Assets.Transactions", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Order("created_at DESC")
+		}).
+		Relation("Reminders", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Order("created_at DESC")
+		}).
+		Scan(ctx)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -53,7 +87,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.U
 }
 
 func (r *userRepository) ExistEmail(ctx context.Context, email string) (bool, error) {
-	var user *model.User
+	user := &model.User{}
 
 	count, err := r.db.NewSelect().
 		Model(user).

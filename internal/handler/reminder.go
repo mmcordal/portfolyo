@@ -7,6 +7,7 @@ import (
 	"portfolyo/internal/infrastructure/errorsx"
 	"portfolyo/internal/service"
 	"portfolyo/internal/viewmodel"
+	"strconv"
 )
 
 type ReminderHandler struct {
@@ -18,8 +19,8 @@ func NewReminderHandler(rs service.ReminderService) *ReminderHandler {
 }
 
 func (h *ReminderHandler) Create(c *app.Ctx) errorsx.APIError {
-	tokenID := c.Locals("user_id").(int64)
-	if tokenID == 0 {
+	tokenID, ok := c.Locals("user_id").(int64)
+	if !ok || tokenID == 0 {
 		return errorsx.UnauthorizedError(errors.New("unauthorized"))
 	}
 	var input viewmodel.ReminderRequest
@@ -35,12 +36,21 @@ func (h *ReminderHandler) Create(c *app.Ctx) errorsx.APIError {
 }
 
 func (h *ReminderHandler) Delete(c *app.Ctx) errorsx.APIError {
-	remindeID := int64(c.QueryInt("id"))
+	tokenID, ok := c.Locals("user_id").(int64)
+	if !ok || tokenID == 0 {
+		return errorsx.UnauthorizedError(errors.New("unauthorized"))
+	}
+
+	remindeID, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		return errorsx.UnauthorizedError(err)
+	}
+
 	if remindeID == 0 {
 		return errorsx.UnauthorizedError(errors.New("unauthorized"))
 	}
 
-	err := h.rs.Delete(context.Background(), remindeID)
+	err = h.rs.Delete(context.Background(), remindeID, tokenID)
 	if err != nil {
 		return errorsx.DatabaseError(err)
 	}
@@ -49,8 +59,8 @@ func (h *ReminderHandler) Delete(c *app.Ctx) errorsx.APIError {
 }
 
 func (h *ReminderHandler) GetAll(c *app.Ctx) errorsx.APIError {
-	tokenID := c.Locals("user_id").(int64)
-	if tokenID == 0 {
+	tokenID, ok := c.Locals("user_id").(int64)
+	if !ok || tokenID == 0 {
 		return errorsx.UnauthorizedError(errors.New("unauthorized"))
 	}
 

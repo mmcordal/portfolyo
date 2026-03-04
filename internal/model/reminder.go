@@ -7,9 +7,11 @@ import (
 )
 
 type Reminder struct {
-	bun.BaseModel `bun:"reminders,alias:r"`
+	bun.BaseModel `bun:"table:reminders,alias:r"`
 	CoreModel
-	UserID int64     `json:"user_id"`
-	Title  string    `json:"title"`
-	Date   time.Time `json:"date"`
+
+	UserID     int64     `bun:",notnull"`
+	User       *User     `bun:"rel:belongs-to,join:user_id=id"`
+	Title      string    `bun:",notnull"`
+	ReminderAt time.Time `bun:",notnull"`
 }

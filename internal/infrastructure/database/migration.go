@@ -15,6 +15,7 @@ func AutoMigration(db *bun.DB) {
 		(*model.UserAsset)(nil),
 		(*model.Transaction)(nil),
 		(*model.Reminder)(nil),
+		(*model.ExchangeRate)(nil),
 	}
 
 	for _, m := range models {

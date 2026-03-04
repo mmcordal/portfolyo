@@ -10,7 +10,7 @@ import (
 
 type ReminderService interface {
 	Create(ctx context.Context, vm *viewmodel.ReminderRequest, userID int64) error
-	Delete(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id, userID int64) error
 	GetAll(ctx context.Context, userID int64) ([]*viewmodel.ReminderVM, error)
 }
 
@@ -37,13 +37,13 @@ func (s *reminderService) Create(ctx context.Context, vm *viewmodel.ReminderRequ
 	if err != nil {
 		return err
 	}
-	reminde.Date = date
+	reminde.ReminderAt = date
 
 	return s.rr.Create(ctx, reminde)
 }
 
-func (s *reminderService) Delete(ctx context.Context, id int64) error {
-	reminde, err := s.rr.GetByReminderID(ctx, id)
+func (s *reminderService) Delete(ctx context.Context, id, userID int64) error {
+	reminde, err := s.rr.GetByReminderID(ctx, id, userID)
 	if err != nil {
 		return err
 	}

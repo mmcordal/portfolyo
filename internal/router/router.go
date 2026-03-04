@@ -18,7 +18,7 @@ func NewRouter() *Router {
 func (Router) RegisterRouter(a *app.App) {
 	app := a.FiberApp
 	db := a.DB
-	redis := a.Redis
+	ks := a.Ks
 
 	// Repos
 	ur := repository.NewUserRepository(db)
@@ -28,37 +28,43 @@ func (Router) RegisterRouter(a *app.App) {
 
 	// Services
 	as := service.NewAuthService(ur)
-	ks := service.NewKurService(redis)
-	uas := service.NewUserAssetsService(uar, ks, tr)
+	uas := service.NewUserAssetsService(uar, ks)
+	ts := service.NewTransactionService(tr, ks, uar)
 	rs := service.NewReminderService(rr)
 
 	// Handlers
 	ah := handler.NewAuthHandler(as)
 	uah := handler.NewUserAssetsHandler(uas)
+	th := handler.NewTransactionHandler(ts)
 	rh := handler.NewReminderHandler(rs)
 
 	v1 := app.Group("/api/v1")
 
-	router.Post(v1, "/Register", ah.Register)
-	router.Post(v1, "/Login", ah.Login)
+	auth := v1.Group("/auth")
+	router.Post(auth, "/register", ah.Register)
+	router.Post(auth, "/login", ah.Login)
 
 	v1.Use(middleware.JWTMiddleware())
 
-	// User
-	router.Get(v1, "/user/profile", ah.GetUserProfile)
-	router.Put(v1, "/user/update", ah.UpdateUser)
-	router.Delete(v1, "/user/delete", ah.DeleteUser)
+	users := v1.Group("/users")
+	router.Get(users, "/me", ah.GetUserProfile)
+	router.Put(users, "/me", ah.UpdateUser)
+	router.Delete(users, "/me", ah.DeleteUser)
 
-	// UserAssets
-	router.Post(v1, "/user/your-assets", uah.UserAssetAdd)
-	router.Get(v1, "/user/your-assets", uah.GetUserAssets)
-	router.Get(v1, "/user/your-assets/pdf", uah.GetUserAssetsPDF)
-	router.Get(v1, "/user/transaction", uah.GetAllTransaction)
-	router.Get(v1, "/user/transaction/pdf", uah.GetTransactionPDF)
-	router.Get(v1, "/user/transaction/excel", uah.GetAllTransactionExcel)
+	assets := v1.Group("/assets")
+	router.Get(assets, "/all", uah.GetUserAssets)
+	router.Get(assets, "/pdf", uah.GetUserAssetsPDF)
+	router.Get(assets, "/:asset", uah.GetUserAsset)
 
-	// Reminder
-	router.Post(v1, "/user/reminder", rh.Create)
-	router.Get(v1, "/user/reminder", rh.GetAll)
-	router.Delete(v1, "/user/reminder", rh.Delete)
+	transactions := v1.Group("/transactions")
+	router.Post(transactions, "/", th.AddTransaction)
+	router.Get(transactions, "/all", th.GetAllTransaction)
+	router.Get(transactions, "/excel", th.GetAllTransactionExcel)
+	router.Get(transactions, "/pdf/:tx_id", th.GetTransactionPDF)
+	router.Get(transactions, "/:asset", th.GetAllTransactionByAsset)
+
+	reminders := v1.Group("/reminders")
+	router.Post(reminders, "/", rh.Create)
+	router.Get(reminders, "/", rh.GetAll)
+	router.Delete(reminders, "/:id", rh.Delete)
 }

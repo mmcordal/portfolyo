@@ -9,7 +9,7 @@ import (
 
 type ReminderRepository interface {
 	Create(ctx context.Context, reminde *model.Reminder) error
-	GetByReminderID(ctx context.Context, id int64) (*model.Reminder, error)
+	GetByReminderID(ctx context.Context, id, userID int64) (*model.Reminder, error)
 	Delete(ctx context.Context, reminde *model.Reminder) error
 	GetAll(ctx context.Context, userID int64) ([]*model.Reminder, error)
 }
@@ -27,12 +27,13 @@ func (r *reminderRepository) Create(ctx context.Context, reminde *model.Reminder
 	return err
 }
 
-func (r *reminderRepository) GetByReminderID(ctx context.Context, id int64) (*model.Reminder, error) {
-	reminde := &model.Reminder{}
+func (r *reminderRepository) GetByReminderID(ctx context.Context, id, userID int64) (*model.Reminder, error) {
+	reminde := new(model.Reminder)
+	reminde.ID = id
 
 	err := r.db.NewSelect().
 		Model(reminde).
-		Where("id = ?", id).
+		WherePK("id").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -52,6 +53,7 @@ func (r *reminderRepository) GetAll(ctx context.Context, userID int64) ([]*model
 	err := r.db.NewSelect().
 		Model(&reminde).
 		Where("user_id = ?", userID).
+		Relation("User").
 		Scan(ctx)
 	return reminde, err
 

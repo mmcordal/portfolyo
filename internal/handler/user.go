@@ -44,8 +44,8 @@ func (h *AuthHandler) Login(c *app.Ctx) errorsx.APIError {
 }
 
 func (h *AuthHandler) GetUserProfile(c *app.Ctx) errorsx.APIError {
-	tokenEmail := c.Locals("email").(string)
-	if tokenEmail == "" {
+	tokenEmail, ok := c.Locals("email").(string)
+	if !ok || tokenEmail == "" {
 		return errorsx.UnauthorizedError(errors.New("unauthorized"))
 	}
 
@@ -58,8 +58,8 @@ func (h *AuthHandler) GetUserProfile(c *app.Ctx) errorsx.APIError {
 }
 
 func (h *AuthHandler) UpdateUser(c *app.Ctx) errorsx.APIError {
-	tokenEmail := c.Locals("email").(string)
-	if tokenEmail == "" {
+	tokenEmail, ok := c.Locals("email").(string)
+	if !ok || tokenEmail == "" {
 		return errorsx.UnauthorizedError(errors.New("unauthorized"))
 	}
 
@@ -77,8 +77,8 @@ func (h *AuthHandler) UpdateUser(c *app.Ctx) errorsx.APIError {
 }
 
 func (h *AuthHandler) DeleteUser(c *app.Ctx) errorsx.APIError {
-	tokenEmail := c.Locals("email").(string)
-	if tokenEmail == "" {
+	tokenEmail, ok := c.Locals("email").(string)
+	if !ok || tokenEmail == "" {
 		return errorsx.UnauthorizedError(errors.New("unauthorized"))
 	}
 

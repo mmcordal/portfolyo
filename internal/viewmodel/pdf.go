@@ -1,7 +1,6 @@
 package viewmodel
 
 import (
-	"portfolyo/internal/model"
 	"time"
 )
 
@@ -14,20 +13,26 @@ type PortfolioReportPDFVM struct {
 }
 
 type PortfolioRowPDFVM struct {
-	AssetName  model.AssetType
+	AssetName  string
 	Amount     float64
 	UnitPrice  float64
 	TotalPrice float64
 }
 
 type TransactionReceiptPDFVM struct {
+	CreatedAt       string
+	UpdatedAt       string
 	NameAndSurname  string
-	BaseCurrency    string
 	AssetName       string
 	Type            string
 	Amount          float64
 	UnitPrice       float64
 	TotalPrice      float64
-	TransactionDate time.Time
+	TransactionDate string
 	Description     string
+	TargetPrice     float64
+
+	BaseCurrency           string
+	BaseCurrencyPrice      float64
+	BaseCurrencyTotalPrice float64
 }

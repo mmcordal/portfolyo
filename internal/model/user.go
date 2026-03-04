@@ -3,12 +3,15 @@ package model
 import "github.com/uptrace/bun"
 
 type User struct {
-	bun.BaseModel `bun:"users,alias:u"`
+	bun.BaseModel `bun:"table:users,alias:u"`
 	CoreModel
-	Name     string `json:"name" `
-	Surname  string `json:"surname"`
-	Email    string `json:"email" bun:",unique"`
-	Password string `json:"password"`
+
+	Name      string       `bun:",notnull"`
+	Surname   string       `bun:",notnull"`
+	Email     string       `bun:",unique,notnull"`
+	Password  string       `bun:",notnull"`
+	Assets    []*UserAsset `bun:"rel:has-many,join:id=user_id"`
+	Reminders []*Reminder  `bun:"rel:has-many,join:id=user_id"`
 }
 
 func (u *User) String() string {

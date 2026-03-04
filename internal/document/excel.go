@@ -4,54 +4,10 @@ import (
 	"fmt"
 	"portfolyo/internal/model"
 	"portfolyo/internal/viewmodel"
+	"strings"
 
 	"github.com/xuri/excelize/v2"
 )
-
-func GenerateTransactionsExcelOnceki(list []*viewmodel.TransactionVM, base model.AssetType) ([]byte, error) {
-	f := excelize.NewFile()
-	sheet := "Transactions"
-	f.SetSheetName("Sheet1", sheet)
-
-	// Başlıklar
-	headers := []string{
-		"ID",
-		"Tarih",
-		"Varlık",
-		"İşlem Tipi",
-		"Miktar",
-		"Birim Fiyat",
-		fmt.Sprintf("Toplam (%s)", base),
-		"Açıklama",
-	}
-
-	for i, h := range headers {
-		cell := fmt.Sprintf("%c1", 'A'+i)
-		f.SetCellValue(sheet, cell, h)
-	}
-
-	// Satırlar
-	for i, tx := range list {
-		row := i + 2
-
-		info := assetInfo(string(tx.Asset))
-
-		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), tx.ID)
-		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), tx.TransactionDate)
-		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), info.Label)
-		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), string(tx.Type))
-		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), fmt.Sprintf("%.4f %s", tx.Amount, info.Unit))
-		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), fmt.Sprintf("%.4f", tx.Price))
-		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), fmt.Sprintf("%.4f", tx.TotalPriceByTargetAsset))
-		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), tx.Description)
-	}
-
-	buf, err := f.WriteToBuffer()
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
 
 func GenerateTransactionsExcel(list []*viewmodel.TransactionVM, targetPrice float64, base model.AssetType) ([]byte, error) {
 	f := excelize.NewFile()
@@ -60,7 +16,6 @@ func GenerateTransactionsExcel(list []*viewmodel.TransactionVM, targetPrice floa
 
 	baseInfo := assetInfo(string(base))
 
-	// ===== STYLES =====
 	headerStyle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true},
 		Alignment: &excelize.Alignment{Horizontal: "center"},
@@ -78,7 +33,6 @@ func GenerateTransactionsExcel(list []*viewmodel.TransactionVM, targetPrice floa
 		NumFmt: 2,
 	})
 
-	// ===== RAPOR HEADER =====
 	f.SetCellValue(sheet, "A1", "KULLANICI İŞLEM RAPORU")
 	f.MergeCell(sheet, "A1", "H1")
 	f.SetCellStyle(sheet, "A1", "A1", headerStyle)
@@ -92,7 +46,8 @@ func GenerateTransactionsExcel(list []*viewmodel.TransactionVM, targetPrice floa
 
 	headers := []string{
 		"ID", "Tarih", "Varlık", "İşlem Tipi",
-		"Miktar", "Birim Fiyat",
+		"Miktar", "Birim Fiyat (TRY)",
+		fmt.Sprintf("Birim Fiyat (%s)", baseInfo.Unit),
 		fmt.Sprintf("Toplam (%s)", baseInfo.Unit),
 		"Açıklama",
 	}
@@ -112,48 +67,72 @@ func GenerateTransactionsExcel(list []*viewmodel.TransactionVM, targetPrice floa
 	f.SetColWidth(sheet, "C", "C", 22)
 	f.SetColWidth(sheet, "D", "D", 14)
 	f.SetColWidth(sheet, "E", "F", 16)
-	f.SetColWidth(sheet, "G", "G", 18)
-	f.SetColWidth(sheet, "H", "H", 30)
+	f.SetColWidth(sheet, "G", "H", 18)
+	f.SetColWidth(sheet, "H", "G", 18)
+	f.SetColWidth(sheet, "I", "I", 30)
 
 	totalBirim := 0.0
 	totalSum := 0.0
 
 	for i, tx := range list {
 		row := i + 6
-		info := assetInfo(string(tx.Asset))
+		info := assetInfo(string(tx.UserAsset.Asset))
 
 		f.SetCellValue(sheet, fmt.Sprintf("A%d", row), tx.ID)
 		f.SetCellValue(sheet, fmt.Sprintf("B%d", row), tx.TransactionDate)
 		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), info.Label)
-		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), typeDegistir(string(tx.Type)))
+		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), typeChange(string(tx.Type)))
 
-		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), fmt.Sprintf("%.4f %s", tx.Amount, info.Unit))
-		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), tx.Price)
-		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), tx.TotalPriceByTargetAsset)
-		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), tx.Description)
+		f.SetCellValue(sheet, fmt.Sprintf("E%d", row),
+			fmt.Sprintf("%.4f %s", tx.Amount, info.Unit))
 
-		f.SetCellStyle(sheet, fmt.Sprintf("F%d", row), fmt.Sprintf("G%d", row), moneyStyle)
+		f.SetCellValue(sheet, fmt.Sprintf("F%d", row),
+			fmt.Sprintf("%.4f ₺", tx.Price))
+		f.SetCellValue(sheet, fmt.Sprintf("G%d", row),
+			fmt.Sprintf("%.4f (%s / %s)", tx.TargetCurrencyPrice,
+				strings.ToLower(info.Unit), strings.ToLower(baseInfo.Unit)))
+		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), tx.TargetCurrencyTotalPrice)
+		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), tx.Description)
+
+		f.SetCellStyle(sheet,
+			fmt.Sprintf("F%d", row),
+			fmt.Sprintf("H%d", row),
+			moneyStyle)
 
 		if tx.Type == model.TypeAdd {
-			f.SetCellStyle(sheet, fmt.Sprintf("D%d", row), fmt.Sprintf("D%d", row), addStyle)
-			totalSum += tx.TotalPriceByTargetAsset
-		} else {
-			f.SetCellStyle(sheet, fmt.Sprintf("D%d", row), fmt.Sprintf("D%d", row), subStyle)
-			totalSum -= tx.TotalPriceByTargetAsset
-		}
+			f.SetCellStyle(sheet,
+				fmt.Sprintf("D%d", row),
+				fmt.Sprintf("D%d", row),
+				addStyle)
 
-		totalBirim += tx.TotalPriceByTargetAsset
+			totalSum += tx.TotalPrice
+			totalBirim += tx.TargetCurrencyTotalPrice
+		} else {
+			f.SetCellStyle(sheet,
+				fmt.Sprintf("D%d", row),
+				fmt.Sprintf("D%d", row),
+				subStyle)
+
+			totalSum -= tx.TotalPrice
+			totalBirim -= tx.TargetCurrencyTotalPrice
+		}
 	}
 
 	sumRow := len(list) + 7
-	f.SetCellValue(sheet, fmt.Sprintf("F%d", sumRow), "İŞLEM YAPILAN TOPLAM BİRİM")
-	f.SetCellValue(sheet, fmt.Sprintf("G%d", sumRow), totalBirim)
-	f.SetCellStyle(sheet, fmt.Sprintf("F%d", sumRow), fmt.Sprintf("G%d", sumRow), headerStyle)
+	f.SetCellValue(sheet, fmt.Sprintf("G%d", sumRow), "İŞLEM YAPILAN TOPLAM BİRİM")
+	f.SetCellValue(sheet, fmt.Sprintf("H%d", sumRow), fmt.Sprintf("%.4f %s", totalBirim, baseInfo.Unit))
+	f.SetCellStyle(sheet,
+		fmt.Sprintf("G%d", sumRow),
+		fmt.Sprintf("H%d", sumRow),
+		headerStyle)
 
 	totalRow := len(list) + 8
-	f.SetCellValue(sheet, fmt.Sprintf("F%d", totalRow), "GENEL TOPLAM")
-	f.SetCellValue(sheet, fmt.Sprintf("G%d", totalRow), totalSum)
-	f.SetCellStyle(sheet, fmt.Sprintf("F%d", totalRow), fmt.Sprintf("G%d", totalRow), headerStyle)
+	f.SetCellValue(sheet, fmt.Sprintf("G%d", totalRow), "GENEL TOPLAM (TRY)")
+	f.SetCellValue(sheet, fmt.Sprintf("H%d", totalRow), fmt.Sprintf("%.4f ₺", totalSum))
+	f.SetCellStyle(sheet,
+		fmt.Sprintf("G%d", totalRow),
+		fmt.Sprintf("H%d", totalRow),
+		headerStyle)
 
 	if err := f.SetPanes(sheet, &excelize.Panes{
 		Freeze:      true,

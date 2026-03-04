@@ -12,15 +12,14 @@ import (
 type TransactionRepository interface {
 	Create(ctx context.Context, transaction *model.Transaction) error
 	WithTx(ctx context.Context, fn func(r UserAssetsRepository, tr TransactionRepository) error) error
-	GetTransaction(ctx context.Context, userID int64) ([]*model.Transaction, error)
-	GetTransactionByID(ctx context.Context, userID, txID int64) (*model.Transaction, error)
+	GetAllTransactionByAsset(ctx context.Context, userID int64) ([]*model.Transaction, error)
+	GetAllTransaction(ctx context.Context, userID int64) ([]*model.Transaction, error)
+	GetTransactionByID(ctx context.Context, txID int64) (*model.Transaction, error)
 }
 
 type transactionRepository struct {
 	db bun.IDB
 }
-
-//  ROUTER A EKLEMEYİ UNUTMA!!!!
 
 func NewTransactionRepository(db bun.IDB) TransactionRepository {
 	return &transactionRepository{db: db}
@@ -42,22 +41,41 @@ func (r *transactionRepository) WithTx(ctx context.Context, fn func(UserAssetsRe
 	})
 }
 
-func (r *transactionRepository) GetTransaction(ctx context.Context, userID int64) ([]*model.Transaction, error) {
-	var transaction []*model.Transaction
+func (r *transactionRepository) GetAllTransactionByAsset(ctx context.Context, assetID int64) ([]*model.Transaction, error) {
+	var transactions []*model.Transaction
+
 	err := r.db.NewSelect().
-		Model(&transaction).
-		Where("user_id = ?", userID).
+		Model(&transactions).
+		Where("t.asset_id = ?", assetID).
+		Relation("UserAsset.User").
+		Order("t.transaction_date DESC").
 		Scan(ctx)
-	return transaction, err
+
+	return transactions, err
 }
 
-func (r *transactionRepository) GetTransactionByID(ctx context.Context, userID, txID int64) (*model.Transaction, error) {
-	var tx model.Transaction
+func (r *transactionRepository) GetAllTransaction(ctx context.Context, userID int64) ([]*model.Transaction, error) {
+	transactions := []*model.Transaction{}
+
 	err := r.db.NewSelect().
-		Model(&tx).
-		Where("user_id = ?", userID).
-		Where("id = ?", txID).
-		Limit(1).
+		Model(&transactions).
+		Relation("UserAsset", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("user_id = ?", userID)
+		}).
+		Relation("UserAsset.User").
+		Order("t.transaction_date DESC").
+		Scan(ctx)
+
+	return transactions, err
+}
+
+func (r *transactionRepository) GetTransactionByID(ctx context.Context, txID int64) (*model.Transaction, error) {
+	tx := new(model.Transaction)
+	tx.ID = txID
+	err := r.db.NewSelect().
+		Model(tx).
+		WherePK("id").
+		Relation("UserAsset.User").
 		Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -65,5 +83,5 @@ func (r *transactionRepository) GetTransactionByID(ctx context.Context, userID, 
 		}
 		return nil, err
 	}
-	return &tx, nil
+	return tx, nil
 }

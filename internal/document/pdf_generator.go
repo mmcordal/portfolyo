@@ -76,7 +76,7 @@ func GeneratePortfolioPDF(vm *viewmodel.PortfolioReportPDFVM, targetPrice float6
 	return buf.Bytes(), err
 }
 
-func GenerateTransactionPDF(vm *viewmodel.TransactionReceiptPDFVM, targetPrice float64) ([]byte, error) {
+func GenerateTransactionPDF(vm *viewmodel.TransactionReceiptPDFVM) ([]byte, error) {
 	pdf := initPDF()
 
 	pdf.SetFont("dejavu", "B", 16)
@@ -86,38 +86,53 @@ func GenerateTransactionPDF(vm *viewmodel.TransactionReceiptPDFVM, targetPrice f
 	pdf.SetFont("dejavu", "", 12)
 	pdf.Cell(0, 7, fmt.Sprintf("Kullanıcı: %s", vm.NameAndSurname))
 	pdf.Ln(6)
-	pdf.Cell(0, 7, fmt.Sprintf("İşlem Tarihi: %s", vm.TransactionDate.Format("02.01.2006 15:04")))
+
+	pdf.Cell(0, 7, fmt.Sprintf("İşlem Tarihi: %s", vm.TransactionDate))
 	pdf.Ln(6)
 	base := assetInfo(vm.BaseCurrency)
+	asset := assetInfo(vm.AssetName)
 
-	pdf.SetFont("dejavu", "", 12)
 	if base.Label == "Türk Lirası" {
 		pdf.Cell(0, 7, fmt.Sprintf("Para Birimi: %s", base.Label))
 	} else {
-		pdf.Cell(0, 7, fmt.Sprintf("Para Birimi: %s = %.4f₺", base.Label, targetPrice))
+		pdf.Cell(0, 7, fmt.Sprintf("Para Birimi: %s = %.4f₺", base.Label, vm.TargetPrice))
 	}
 	pdf.Ln(10)
 
 	info := assetInfo(string(vm.AssetName))
 
 	pdf.SetFont("dejavu", "B", 11)
-	pdf.CellFormat(60, 8, "Alan", "1", 0, "C", false, 0, "")
-	pdf.CellFormat(130, 8, "Değer", "1", 0, "C", false, 0, "")
+	pdf.CellFormat(95, 8, "Alan", "1", 0, "C", false, 0, "")
+	pdf.CellFormat(95, 8, "Değer", "1", 0, "C", false, 0, "")
 	pdf.Ln(-1)
 
 	pdf.SetFont("dejavu", "", 11)
 
 	row := func(label, val string) {
-		pdf.CellFormat(60, 8, label, "1", 0, "", false, 0, "")
-		pdf.CellFormat(130, 8, val, "1", 0, "", false, 0, "")
+		pdf.CellFormat(95, 8, label, "1", 0, "", false, 0, "")
+		pdf.CellFormat(95, 8, val, "1", 0, "", false, 0, "")
 		pdf.Ln(-1)
 	}
 
 	row("Varlık", info.Label)
-	row("Tip", typeDegistir(vm.Type))
+	row("Tip", typeChange(vm.Type))
 	row("Miktar", fmt.Sprintf("%.4f %s", vm.Amount, info.Unit))
 	row("Birim Fiyat", fmt.Sprintf("%.4f", vm.UnitPrice))
 	row("Toplam", fmt.Sprintf("%.4f %s", vm.TotalPrice, base.Unit))
+
+	row(
+		fmt.Sprintf("%s Birim Fiyat (%s / %s)", asset.Label, asset.Unit, base.Unit),
+		fmt.Sprintf("%.4f (%s / %s)", vm.BaseCurrencyPrice, asset.Unit, base.Unit),
+	)
+
+	if base.Label != "Türk Lirası" {
+		row(
+			fmt.Sprintf("Toplam (%s)", base.Unit),
+			fmt.Sprintf("%.4f %s", vm.BaseCurrencyTotalPrice, base.Unit),
+		)
+	}
+	row("Oluşturulma Tarihi", vm.CreatedAt)
+	row("Güncellenme Tarihi", vm.UpdatedAt)
 
 	if vm.Description != "" {
 		pdf.Ln(6)
@@ -166,7 +181,7 @@ func assetInfo(a string) assetMeta {
 	}
 }
 
-func typeDegistir(a string) string {
+func typeChange(a string) string {
 	switch model.TypeAction(a) {
 	case model.TypeSubtract:
 		return "Çıkarma"

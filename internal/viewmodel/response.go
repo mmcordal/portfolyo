@@ -7,8 +7,8 @@ type Validation interface {
 type SuccessResponse struct {
 	Success   bool        `json:"success"`
 	Message   string      `json:"message,omitempty"`
-	Data      interface{} `json:"data"`
 	DataCount int         `json:"data_count"`
+	Data      interface{} `json:"data"`
 }
 
 type ErrorResponse struct {

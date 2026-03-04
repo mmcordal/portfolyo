@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"portfolyo/internal/infrastructure/cache"
 	"portfolyo/internal/model"
+	"portfolyo/internal/repository"
 	"portfolyo/internal/viewmodel"
 	"strconv"
 	"strings"
@@ -24,15 +25,17 @@ type cachePayload struct {
 
 type KurService interface {
 	FetchFromDoviz() (*viewmodel.GuncelKurVM, error)
-	FetchFromDovizTransaction(asset model.AssetType) (*viewmodel.CurrentByAssetType, error)
+	FetchFromDovizForTransaction(asset model.AssetType) (*viewmodel.CurrentByAssetType, error)
+	FetchAndSaveRates() error
 }
 
 type kurService struct {
 	cache *cache.RedisClient
+	rate  repository.ExchangeRatesRepository
 }
 
-func NewKurService(c *cache.RedisClient) KurService {
-	return &kurService{cache: c}
+func NewKurService(c *cache.RedisClient, r repository.ExchangeRatesRepository) KurService {
+	return &kurService{cache: c, rate: r}
 }
 
 func parsePrice(s string) float64 {
@@ -157,7 +160,7 @@ func (s *kurService) FetchFromDoviz() (*viewmodel.GuncelKurVM, error) {
 	return vm, nil
 }
 
-func (s *kurService) FetchFromDovizTransaction(asset model.AssetType) (*viewmodel.CurrentByAssetType, error) {
+func (s *kurService) FetchFromDovizForTransaction(asset model.AssetType) (*viewmodel.CurrentByAssetType, error) {
 
 	kur, err := s.fetchFromDovizForTransaction()
 	if err != nil {
@@ -205,6 +208,32 @@ func (s *kurService) FetchFromDovizTransaction(asset model.AssetType) (*viewmode
 		Asset: asset,
 		Price: price,
 	}, nil
+}
+
+func (s *kurService) FetchAndSaveRates() error {
+	kur, err := s.fetchFromDovizForTransaction()
+	if err != nil {
+		return err
+	}
+
+	rate := &model.ExchangeRate{
+		Dolar:            kur.Dolar,
+		Sterlin:          kur.Sterlin,
+		Euro:             kur.Euro,
+		Frank:            kur.Frank,
+		CeyrekAltin:      kur.CeyrekAltin,
+		YarimAltin:       kur.YarimAltin,
+		TamAltin:         kur.TamAltin,
+		CumhuriyetAltini: kur.CumhuriyetAltini,
+		Bilezik22Ayar:    kur.Bilezik22Ayar,
+		GramAltin14Ayar:  kur.GramAltin14Ayar,
+		GramAltin18Ayar:  kur.GramAltin18Ayar,
+		GramAltin22Ayar:  kur.GramAltin22Ayar,
+		GramAltin24Ayar:  kur.GramAltin24Ayar,
+		Gumus:            kur.Gumus,
+	}
+
+	return s.rate.Create(context.Background(), rate)
 }
 
 func (s *kurService) fetchFromDovizForTransaction() (*viewmodel.GuncelKurVM, error) {
