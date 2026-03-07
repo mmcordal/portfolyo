@@ -15,6 +15,7 @@ type TransactionRepository interface {
 	GetAllTransactionByAsset(ctx context.Context, userID int64) ([]*model.Transaction, error)
 	GetAllTransaction(ctx context.Context, userID int64) ([]*model.Transaction, error)
 	GetTransactionByID(ctx context.Context, txID int64) (*model.Transaction, error)
+	GetTransactionByIDAndUserID(ctx context.Context, txID int64, userID int64) (*model.Transaction, error)
 }
 
 type transactionRepository struct {
@@ -83,5 +84,23 @@ func (r *transactionRepository) GetTransactionByID(ctx context.Context, txID int
 		}
 		return nil, err
 	}
+	return tx, nil
+}
+
+func (r *transactionRepository) GetTransactionByIDAndUserID(ctx context.Context, txID int64, userID int64) (*model.Transaction, error) {
+	tx := new(model.Transaction)
+	err := r.db.NewSelect().
+		Model(tx).
+		Where("t.id = ?", txID).
+		Where("ua.user_id = ?", userID).
+		Relation("UserAsset.User").
+		Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
 	return tx, nil
 }

@@ -68,6 +68,9 @@ func (h *UserAssetsHandler) GetUserAsset(c *app.Ctx) errorsx.APIError {
 
 	resp, targetPrice, err := h.uas.GetUserAsset(context.Background(), tokenID, target, assetType)
 	if err != nil {
+		if errors.Is(err, service.ErrNotFound) {
+			return errorsx.NotFoundError(err)
+		}
 		return errorsx.DatabaseError(err)
 	}
 

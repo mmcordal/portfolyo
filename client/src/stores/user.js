@@ -1,24 +1,47 @@
-import { defineStore } from "pinia";
-import router from "../router";
+import { reactive, computed } from 'vue'
+import router from '../router'
 
-export const useUserStore = defineStore("user", {
-    state: () => ({
-        user: null,
-        jwt: localStorage.getItem("jwt") || null,
-    }),
-    actions: {
-        setUser(user) {
-            this.user = user;
+const state = reactive({
+    profile: null,
+    jwt: localStorage.getItem('jwt') || null,
+})
+
+export function useUserStore() {
+    const isAuthenticated = computed(() => Boolean(state.jwt))
+    const fullName = computed(() => state.profile?.full_name || '-')
+
+    function setProfile(profile) {
+        state.profile = profile
+    }
+
+    function setToken(token) {
+        state.jwt = token
+        localStorage.setItem('jwt', token)
+    }
+
+    function clearSession() {
+        state.profile = null
+        state.jwt = null
+        localStorage.removeItem('jwt')
+    }
+
+    function logout() {
+        clearSession()
+        router.push('/login')
+    }
+
+    return {
+        get profile() {
+            return state.profile
         },
-        setToken(token) {
-            this.jwt = token;
-            localStorage.setItem("jwt", token);
+        get jwt() {
+            return state.jwt
         },
-        logout() {
-            this.user = null;
-            this.jwt = null;
-            localStorage.removeItem("jwt");
-            router.push("/login"); // logout sonrası login sayfasına yönlendir
-        },
-    },
-});
+        isAuthenticated,
+        fullName,
+        setProfile,
+        setToken,
+        clearSession,
+        logout,
+    }
+}

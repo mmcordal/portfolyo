@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"portfolyo/internal/model"
 	"portfolyo/internal/repository"
 	"portfolyo/internal/viewmodel"
@@ -13,7 +14,7 @@ type TransactionService interface {
 	TransactionAdd(ctx context.Context, vm *viewmodel.TransactionRequest, userID int64) error
 	GetAllTransactionByAsset(ctx context.Context, userID int64, target model.AssetType, assetType model.AssetType) ([]*viewmodel.TransactionVM, float64, error)
 	GetAllTransaction(ctx context.Context, userID int64, target model.AssetType) ([]*viewmodel.TransactionVM, float64, error)
-	GetTransactionPDF(ctx context.Context, txID int64, target model.AssetType) (*viewmodel.TransactionReceiptPDFVM, error)
+	GetTransactionPDF(ctx context.Context, userID int64, txID int64, target model.AssetType) (*viewmodel.TransactionReceiptPDFVM, error)
 }
 
 type transactionService struct {
@@ -142,10 +143,18 @@ func (s *transactionService) GetAllTransaction(ctx context.Context, userID int64
 	return allTVM, targetPrice, nil
 }
 
-func (s *transactionService) GetTransactionPDF(ctx context.Context, txID int64, target model.AssetType) (*viewmodel.TransactionReceiptPDFVM, error) {
-	tx, err := s.tr.GetTransactionByID(ctx, txID)
+var ErrTransactionNotFoundOrUnauthorized = errors.New("transaction not found or unauthorized")
+
+func (s *transactionService) GetTransactionPDF(ctx context.Context, userID int64, txID int64, target model.AssetType) (*viewmodel.TransactionReceiptPDFVM, error) {
+	tx, err := s.tr.GetTransactionByIDAndUserID(ctx, txID, userID)
 	if err != nil {
 		return nil, err
+	}
+	if tx == nil {
+		return nil, fmt.Errorf("%w: transaction not found", ErrNotFound)
+	}
+	if tx.UserAsset == nil || tx.UserAsset.User == nil {
+		return nil, fmt.Errorf("%w: transaction relation not found", ErrNotFound)
 	}
 
 	kur, err := s.ks.FetchFromDoviz()
@@ -184,3 +193,5 @@ func (s *transactionService) GetTransactionPDF(ctx context.Context, txID int64, 
 
 	return pdfVM, nil
 }
+
+var ErrNotFound = errors.New("record not found")

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"portfolyo/internal/model"
 
 	"github.com/uptrace/bun"
@@ -29,13 +30,16 @@ func (r *reminderRepository) Create(ctx context.Context, reminde *model.Reminder
 
 func (r *reminderRepository) GetByReminderID(ctx context.Context, id, userID int64) (*model.Reminder, error) {
 	reminde := new(model.Reminder)
-	reminde.ID = id
 
 	err := r.db.NewSelect().
 		Model(reminde).
-		WherePK("id").
+		Where("id = ?", id).
+		Where("user_id = ?", userID).
 		Scan(ctx)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 

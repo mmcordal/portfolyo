@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"portfolyo/internal/model"
 	"portfolyo/internal/repository"
 	"portfolyo/internal/viewmodel"
@@ -47,6 +48,9 @@ func (s *userAssetsService) GetUserAsset(ctx context.Context, userID int64, targ
 	asset, err := s.uar.GetUserAssetWithTransactionByAsset(ctx, userID, assetType)
 	if err != nil {
 		return nil, 0, err
+	}
+	if asset == nil {
+		return nil, 0, fmt.Errorf("%w: user asset not found", ErrNotFound)
 	}
 
 	kur, err := s.ks.FetchFromDoviz()

@@ -1,37 +1,46 @@
 <template>
-  <div>
-    <h2>Kayıt Ol</h2>
-    <form @submit.prevent="register">
-      <input v-model="name" placeholder="İsim" required />
-      <input v-model="surname" placeholder="Soyisim" required />
-      <input v-model="email" type="email" placeholder="Email" required />
-      <input v-model="password" type="password" placeholder="Şifre" required />
-      <button type="submit">Kayıt Ol</button>
-    </form>
-    <p v-if="error" style="color:red">{{ error }}</p>
-    <router-link to="/login">Login</router-link>
-  </div>
+  <section class="auth-container">
+    <div class="card auth-card">
+      <h2>Kayıt Ol</h2>
+      <form @submit.prevent="submit">
+        <input v-model="form.name" type="text" placeholder="Ad" required minlength="2" />
+        <input v-model="form.surname" type="text" placeholder="Soyad" required minlength="2" />
+        <input v-model="form.email" type="email" placeholder="E-posta" required />
+        <input v-model="form.password" type="password" placeholder="Şifre" required minlength="8" />
+        <button type="submit" :disabled="loading">{{ loading ? 'Kaydediliyor...' : 'Kayıt Ol' }}</button>
+      </form>
+      <p class="ok" v-if="success">{{ success }}</p>
+      <p class="error" v-if="error">{{ error }}</p>
+      <router-link to="/login">Hesabın var mı? Giriş yap.</router-link>
+    </div>
+  </section>
 </template>
 
 <script setup>
-import { ref } from "vue";
-import api from "../api";
-import { useRouter } from "vue-router";
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { extractErrorMessage } from '../api'
+import { authService } from '../services/portfolio'
 
-const name = ref("");
-const surname = ref("");
-const email = ref("");
-const password = ref("");
-const error = ref(null);
-const router = useRouter();
+const form = reactive({ name: '', surname: '', email: '', password: '' })
+const loading = ref(false)
+const success = ref('')
+const error = ref('')
+const router = useRouter()
 
-const register = async () => {
+async function submit() {
   try {
-    await api.post("/auth/register", { name: name.value, surname: surname.value, email: email.value, password: password.value });
-    error.value = null;
-    router.push("/login");
+    loading.value = true
+    success.value = ''
+    error.value = ''
+
+    await authService.register(form)
+    success.value = 'Kayıt başarılı. Giriş sayfasına yönlendiriliyorsunuz...'
+    setTimeout(() => router.push('/login'), 900)
   } catch (err) {
-    error.value = err.response?.data?.message || err.message;
+    error.value = extractErrorMessage(err)
+  } finally {
+    loading.value = false
   }
-};
+}
 </script>

@@ -122,8 +122,11 @@ func (h *TransactionHandler) GetTransactionPDF(c *app.Ctx) errorsx.APIError {
 		})
 	}
 
-	pdfVM, err := h.ts.GetTransactionPDF(context.Background(), txID, target)
+	pdfVM, err := h.ts.GetTransactionPDF(context.Background(), tokenID, txID, target)
 	if err != nil {
+		if errors.Is(err, service.ErrNotFound) {
+			return errorsx.NotFoundError(err)
+		}
 		return errorsx.DatabaseError(err)
 	}
 
