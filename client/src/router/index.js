@@ -6,6 +6,11 @@ const routes = [
     { path: '/login', component: () => import('../views/Login.vue') },
     { path: '/register', component: () => import('../views/Register.vue') },
     {
+        path: '/profile',
+        component: () => import('../views/Profile.vue'),
+        meta: { requiresAuth: true },
+    },
+    {
         path: '/dashboard',
         component: () => import('../views/Dashboard.vue'),
         meta: { requiresAuth: true },

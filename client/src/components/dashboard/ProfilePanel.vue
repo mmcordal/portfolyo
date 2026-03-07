@@ -9,6 +9,9 @@
       <span>{{ email }}</span>
     </div>
 
+    <StatusBanner type="error" :message="status.error" />
+    <StatusBanner type="ok" :message="status.ok" />
+
     <form class="inline-form" @submit.prevent="$emit('update')">
       <input v-model="form.name" placeholder="Yeni ad" />
       <input v-model="form.surname" placeholder="Yeni soyad" />
@@ -21,12 +24,14 @@
 
 <script setup>
 import AppCard from '../ui/AppCard.vue'
+import StatusBanner from '../ui/StatusBanner.vue'
 
 defineProps({
   fullName: { type: String, default: '-' },
   email: { type: String, default: '' },
   form: { type: Object, required: true },
   loading: { type: Boolean, default: false },
+  status: { type: Object, default: () => ({ ok: '', error: '' }) },
 })
 
 defineEmits(['update', 'delete'])

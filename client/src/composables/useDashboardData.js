@@ -2,6 +2,25 @@ import { reactive, ref } from 'vue'
 import { extractErrorMessage } from '../api'
 import { authService, assetService, downloadBlob, reminderService, transactionService } from '../services/portfolio'
 
+function createStatusState() {
+    return reactive({ ok: '', error: '' })
+}
+
+function clearStatus(status) {
+    status.ok = ''
+    status.error = ''
+}
+
+function setError(status, err) {
+    clearStatus(status)
+    status.error = extractErrorMessage(err)
+}
+
+function setOk(status, message) {
+    clearStatus(status)
+    status.ok = message
+}
+
 export function useDashboardData(userStore) {
     const currency = ref('try')
     const txAssetFilter = ref('')
@@ -16,23 +35,24 @@ export function useDashboardData(userStore) {
     const profileForm = reactive({ name: '', surname: '', email: '', password: '' })
 
     const loading = reactive({ profile: false, tx: false, reminder: false, page: false })
-    const error = ref('')
-    const ok = ref('')
-
-    function resetMessage() {
-        error.value = ''
-        ok.value = ''
-    }
+    const status = reactive({
+        page: createStatusState(),
+        assets: createStatusState(),
+        tx: createStatusState(),
+        reminders: createStatusState(),
+        profile: createStatusState(),
+    })
 
     async function bootstrap() {
         try {
             loading.page = true
+            clearStatus(status.page)
             const meRes = await authService.me()
             userStore.setProfile(meRes.data)
             profileForm.email = meRes.data?.email || ''
             await Promise.all([fetchAssets(), fetchTransactions(), fetchReminders()])
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.page, err)
             if (err?.response?.status === 401) {
                 userStore.logout()
             }
@@ -46,7 +66,7 @@ export function useDashboardData(userStore) {
             const res = await assetService.getAll(currency.value)
             assetsAll.value = res.data
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.assets, err)
         }
     }
 
@@ -54,8 +74,9 @@ export function useDashboardData(userStore) {
         try {
             const res = await assetService.getByAsset(asset, currency.value)
             singleAsset.value = res.data
+            setOk(status.assets, `${asset.toUpperCase()} detayı getirildi.`)
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.assets, err)
         }
     }
 
@@ -63,16 +84,16 @@ export function useDashboardData(userStore) {
         try {
             const blob = await assetService.downloadPDF(currency.value)
             downloadBlob(blob, `portfolio-${currency.value}.pdf`)
-            ok.value = 'Portföy PDF indirildi.'
+            setOk(status.assets, 'Portföy PDF indirildi.')
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.assets, err)
         }
     }
 
     async function createTransaction() {
         try {
             loading.tx = true
-            resetMessage()
+            clearStatus(status.tx)
             await transactionService.create({
                 ...txForm,
                 transaction_date: txForm.transaction_date ? new Date(txForm.transaction_date).toISOString() : '',
@@ -81,10 +102,10 @@ export function useDashboardData(userStore) {
             txForm.amount = null
             txForm.transaction_date = ''
             txForm.description = ''
-            ok.value = 'İşlem eklendi.'
+            setOk(status.tx, 'İşlem eklendi.')
             await Promise.all([fetchAssets(), fetchTransactions()])
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.tx, err)
         } finally {
             loading.tx = false
         }
@@ -97,7 +118,7 @@ export function useDashboardData(userStore) {
                 : await transactionService.getAll(currency.value)
             transactions.value = res.data || []
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.tx, err)
         }
     }
 
@@ -105,9 +126,9 @@ export function useDashboardData(userStore) {
         try {
             const blob = await transactionService.downloadExcel(currency.value)
             downloadBlob(blob, `transactions-${currency.value}.xlsx`)
-            ok.value = 'İşlemler Excel olarak indirildi.'
+            setOk(status.tx, 'İşlemler Excel olarak indirildi.')
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.tx, err)
         }
     }
 
@@ -115,9 +136,9 @@ export function useDashboardData(userStore) {
         try {
             const blob = await transactionService.downloadPDF(txId, currency.value)
             downloadBlob(blob, `transaction-${txId}.pdf`)
-            ok.value = `İşlem #${txId} PDF indirildi.`
+            setOk(status.tx, `İşlem #${txId} PDF indirildi.`)
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.tx, err)
         }
     }
 
@@ -126,24 +147,24 @@ export function useDashboardData(userStore) {
             const res = await reminderService.getAll()
             reminders.value = res.data || []
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.reminders, err)
         }
     }
 
     async function createReminder() {
         try {
             loading.reminder = true
-            resetMessage()
+            clearStatus(status.reminders)
             await reminderService.create({
                 title: reminderForm.title,
                 date: reminderForm.date ? new Date(reminderForm.date).toISOString() : '',
             })
             reminderForm.title = ''
             reminderForm.date = ''
-            ok.value = 'Hatırlatıcı eklendi.'
+            setOk(status.reminders, 'Hatırlatıcı eklendi.')
             await fetchReminders()
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.reminders, err)
         } finally {
             loading.reminder = false
         }
@@ -151,32 +172,32 @@ export function useDashboardData(userStore) {
 
     async function deleteReminder(id) {
         try {
-            resetMessage()
+            clearStatus(status.reminders)
             await reminderService.remove(id)
-            ok.value = 'Hatırlatıcı silindi.'
+            setOk(status.reminders, 'Hatırlatıcı silindi.')
             await fetchReminders()
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.reminders, err)
         }
     }
 
     async function updateProfile() {
         try {
             loading.profile = true
-            resetMessage()
+            clearStatus(status.profile)
             const payload = Object.fromEntries(Object.entries(profileForm).filter(([, v]) => String(v || '').trim() !== ''))
             if (!Object.keys(payload).length) {
-                ok.value = 'Güncellenecek alan bulunamadı.'
+                setOk(status.profile, 'Güncellenecek alan bulunamadı.')
                 return
             }
             await authService.updateMe(payload)
-            ok.value = 'Profil güncellendi.'
+            setOk(status.profile, 'Profil güncellendi.')
             Object.assign(profileForm, { name: '', surname: '', email: payload.email || profileForm.email, password: '' })
             const meRes = await authService.me()
             userStore.setProfile(meRes.data)
             profileForm.email = meRes.data?.email || ''
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.profile, err)
         } finally {
             loading.profile = false
         }
@@ -186,11 +207,11 @@ export function useDashboardData(userStore) {
         if (!window.confirm('Hesabınızı silmek istediğinize emin misiniz?')) return
         try {
             loading.profile = true
-            resetMessage()
+            clearStatus(status.profile)
             await authService.deleteMe()
             userStore.logout()
         } catch (err) {
-            error.value = extractErrorMessage(err)
+            setError(status.profile, err)
         } finally {
             loading.profile = false
         }
@@ -207,9 +228,7 @@ export function useDashboardData(userStore) {
         reminderForm,
         profileForm,
         loading,
-        error,
-        ok,
-        resetMessage,
+        status,
         bootstrap,
         fetchAssets,
         fetchSingleAsset,

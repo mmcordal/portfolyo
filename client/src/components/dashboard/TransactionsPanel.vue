@@ -1,5 +1,7 @@
 <template>
   <AppCard title="İşlemler" subtitle="Ekleme, filtreleme ve raporlama">
+    <StatusBanner type="error" :message="status.error" />
+    <StatusBanner type="ok" :message="status.ok" />
     <div class="grid two-col">
       <form class="inline-form" @submit.prevent="$emit('create')">
         <h3>Yeni İşlem</h3>
@@ -49,6 +51,7 @@
 
 <script setup>
 import AppCard from '../ui/AppCard.vue'
+import StatusBanner from '../ui/StatusBanner.vue'
 import { formatDate, formatNumber } from '../../utils/format'
 
 defineProps({
@@ -58,6 +61,7 @@ defineProps({
   actionTypes: { type: Array, required: true },
   assetTypes: { type: Array, required: true },
   loadingTx: { type: Boolean, default: false },
+  status: { type: Object, default: () => ({ ok: '', error: '' }) },
 })
 
 defineEmits(['create', 'asset-filter-change', 'refresh', 'download-excel', 'download-pdf'])

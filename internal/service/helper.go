@@ -20,7 +20,9 @@ func totalAsset(assets []*model.UserAsset, kur *viewmodel.GuncelKurVM, target mo
 		return nil, 0, errors.New("unsupported asset type")
 	}
 	if len(assets) == 0 {
-		return nil, 0, nil
+		totalAsset.Assets = vms
+		totalAsset.Currency = string(target)
+		return totalAsset, targetPrice, nil
 	}
 
 	if assets[0].ID > 0 {

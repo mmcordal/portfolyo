@@ -1,8 +1,11 @@
 <template>
-  <AppCard title="Portföy" subtitle="Varlık dağılımınızı takip edin">
+  <AppCard title="Portföy" subtitle="Varlık dağılımınızı grafik ve tabloyla takip edin">
     <template #actions>
       <button @click="$emit('download-pdf')">Portföy PDF</button>
     </template>
+
+    <StatusBanner type="error" :message="status.error" />
+    <StatusBanner type="ok" :message="status.ok" />
 
     <div class="toolbar">
       <label>Hedef Para</label>
@@ -13,7 +16,18 @@
 
     <p class="summary" v-if="assetsAll">Toplam: {{ formatNumber(assetsAll.total_price) }} {{ assetsAll.currency?.toUpperCase() }}</p>
 
-    <table v-if="assetsAll?.assets?.length">
+    <div class="charts" v-if="hasAssets">
+      <div class="chart-box">
+        <h3>Dağılım (Pasta)</h3>
+        <Pie :data="pieData" :options="chartOptions" />
+      </div>
+      <div class="chart-box">
+        <h3>Varlık Değerleri (Çubuk)</h3>
+        <Bar :data="barData" :options="chartOptions" />
+      </div>
+    </div>
+
+    <table v-if="hasAssets">
       <thead><tr><th>Varlık</th><th>Miktar</th><th>Birim</th><th>Toplam</th><th></th></tr></thead>
       <tbody>
       <tr v-for="asset in assetsAll.assets" :key="asset.id">
@@ -42,17 +56,81 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { Bar, Pie } from 'vue-chartjs'
+import {
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  Title,
+  Tooltip,
+} from 'chart.js'
 import AppCard from '../ui/AppCard.vue'
+import StatusBanner from '../ui/StatusBanner.vue'
 import { formatDate, formatNumber } from '../../utils/format'
 
-defineProps({
+ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, LinearScale, BarElement)
+
+const props = defineProps({
   assetsAll: { type: Object, default: null },
   singleAsset: { type: Object, default: null },
   currency: { type: String, required: true },
   currencies: { type: Array, required: true },
+  status: { type: Object, default: () => ({ ok: '', error: '' }) },
 })
 
 defineEmits(['download-pdf', 'currency-change', 'show-asset'])
+
+const chartAssets = computed(() => props.assetsAll?.assets || [])
+const hasAssets = computed(() => chartAssets.value.length > 0)
+const labels = computed(() => chartAssets.value.map((asset) => asset.asset.toUpperCase()))
+const totals = computed(() => chartAssets.value.map((asset) => Number(asset.total_price_by_asset || 0)))
+const colorPalette = ['#3b82f6', '#22d3ee', '#f59e0b', '#34d399', '#f472b6', '#a78bfa', '#f87171']
+
+const pieData = computed(() => ({
+  labels: labels.value,
+  datasets: [{
+    label: `Toplam (${props.assetsAll?.currency?.toUpperCase() || ''})`,
+    data: totals.value,
+    backgroundColor: labels.value.map((_, index) => colorPalette[index % colorPalette.length]),
+    borderColor: '#0f172a',
+    borderWidth: 1,
+  }],
+}))
+
+const barData = computed(() => ({
+  labels: labels.value,
+  datasets: [{
+    label: `Varlık Değeri (${props.assetsAll?.currency?.toUpperCase() || ''})`,
+    data: totals.value,
+    backgroundColor: 'rgba(59, 130, 246, 0.75)',
+    borderRadius: 8,
+  }],
+}))
+
+const chartOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { labels: { color: '#dbeafe' } },
+    tooltip: {
+      callbacks: {
+        label(context) {
+          const value = formatNumber(context.parsed || context.raw)
+          const code = props.assetsAll?.currency?.toUpperCase() || ''
+          return `${context.label}: ${value} ${code}`
+        },
+      },
+    },
+  },
+  scales: {
+    x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.15)' } },
+    y: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.15)' } },
+  },
+}))
 </script>
 
 <style scoped>
@@ -64,6 +142,25 @@ defineEmits(['download-pdf', 'currency-change', 'show-asset'])
 .asset-detail h3 { margin: 0 0 .4rem; }
 .asset-detail p { margin: 0 0 .6rem; }
 .subtle { color: var(--color-muted); }
+.charts {
+  display: grid;
+  gap: .85rem;
+  margin-bottom: .85rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+.chart-box {
+  background: rgba(2, 6, 23, 0.45);
+  border: 1px solid var(--color-surface-light);
+  border-radius: 12px;
+  padding: .6rem;
+}
+.chart-box h3 {
+  margin: 0 0 .45rem;
+  font-size: .9rem;
+}
+.chart-box :deep(canvas) {
+  height: 220px !important;
+}
 .list li {
   display: grid;
   grid-template-columns: .8fr .7fr 1fr;

@@ -2,7 +2,7 @@
   <nav class="navbar" v-if="userStore.isAuthenticated">
     <button class="brand" @click="$router.push('/dashboard')">Portfolyo</button>
     <div class="actions">
-      <span class="name">{{ userStore.fullName }}</span>
+      <button class="name-link" type="button" @click="$router.push('/profile')">{{ userStore.fullName }}</button>
       <button type="button" class="danger" @click="userStore.logout()">Çıkış</button>
     </div>
   </nav>
@@ -35,5 +35,10 @@ const userStore = useUserStore()
   padding: .55rem .9rem;
 }
 .actions { display: flex; gap: .75rem; align-items: center; }
-.name { color: var(--color-muted); font-weight: 600; }
+.name-link {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  color: var(--color-muted);
+  font-weight: 600;
+}
 </style>
