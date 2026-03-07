@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -18,6 +19,8 @@ func NewRedisClient(addr string) *RedisClient {
 
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
 		panic("Redis bağlantısı kurulamadı: " + err.Error())
+	} else {
+		log.Println("redise baglandım")
 	}
 
 	return &RedisClient{Client: rdb}
