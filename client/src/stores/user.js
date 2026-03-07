@@ -1,4 +1,4 @@
-import { reactive, computed } from 'vue'
+import { computed, reactive } from 'vue'
 import router from '../router'
 
 const state = reactive({
@@ -6,10 +6,10 @@ const state = reactive({
     jwt: localStorage.getItem('jwt') || null,
 })
 
-export function useUserStore() {
-    const isAuthenticated = computed(() => Boolean(state.jwt))
-    const fullName = computed(() => state.profile?.full_name || '-')
+const isAuthenticated = computed(() => Boolean(state.jwt))
+const fullName = computed(() => state.profile?.full_name || '-')
 
+export function useUserStore() {
     function setProfile(profile) {
         state.profile = profile
     }
@@ -37,8 +37,12 @@ export function useUserStore() {
         get jwt() {
             return state.jwt
         },
-        isAuthenticated,
-        fullName,
+        get isAuthenticated() {
+            return isAuthenticated.value
+        },
+        get fullName() {
+            return fullName.value
+        },
         setProfile,
         setToken,
         clearSession,

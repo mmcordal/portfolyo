@@ -1,71 +1,62 @@
-import api from '../api'
+import { apiRequest } from '../api'
 
 export const authService = {
     register(payload) {
-        return api.post('/auth/register', payload)
+        return apiRequest('/auth/register', { method: 'POST', body: payload })
     },
     login(payload) {
-        return api.post('/auth/login', payload)
+        return apiRequest('/auth/login', { method: 'POST', body: payload })
     },
     me() {
-        return api.get('/users/me')
+        return apiRequest('/users/me')
     },
     updateMe(payload) {
-        return api.put('/users/me', payload)
+        return apiRequest('/users/me', { method: 'PUT', body: payload })
     },
     deleteMe() {
-        return api.delete('/users/me')
+        return apiRequest('/users/me', { method: 'DELETE' })
     },
 }
 
 export const assetService = {
     getAll(currency) {
-        return api.get('/assets/all', { headers: { 'X-Currency': currency } })
+        return apiRequest('/assets/all', { headers: { 'X-Currency': currency } })
     },
     getByAsset(asset, currency) {
-        return api.get(`/assets/${asset}`, { headers: { 'X-Currency': currency } })
+        return apiRequest(`/assets/${asset}`, { headers: { 'X-Currency': currency } })
     },
     downloadPDF(currency) {
-        return api.get('/assets/pdf', {
-            headers: { 'X-Currency': currency },
-            responseType: 'blob',
-        })
+        return apiRequest('/assets/pdf', { headers: { 'X-Currency': currency }, responseType: 'blob' })
     },
 }
 
 export const transactionService = {
     create(payload) {
-        return api.post('/transactions/', payload)
+        return apiRequest('/transactions/', { method: 'POST', body: payload })
     },
     getAll(currency) {
-        return api.get('/transactions/all', { headers: { 'X-Currency': currency } })
+        return apiRequest('/transactions/all', { headers: { 'X-Currency': currency } })
     },
     getByAsset(asset, currency) {
-        return api.get(`/transactions/${asset}`, { headers: { 'X-Currency': currency } })
+        return apiRequest(`/transactions/${asset}`, { headers: { 'X-Currency': currency } })
     },
     downloadExcel(currency) {
-        return api.get('/transactions/excel', {
-            headers: { 'X-Currency': currency },
-            responseType: 'blob',
-        })
+        return apiRequest('/transactions/excel', { headers: { 'X-Currency': currency }, responseType: 'blob' })
     },
     downloadPDF(txId, currency) {
-        return api.get(`/transactions/pdf/${txId}`, {
-            headers: { 'X-Currency': currency },
-            responseType: 'blob',
-        })
+        return apiRequest(`/transactions/pdf/${txId}`, { headers: { 'X-Currency': currency }, responseType: 'blob' })
     },
 }
 
 export const reminderService = {
     create(payload) {
-        return api.post('/reminders/', payload)
+        return apiRequest('/reminders/', { method: 'POST', body: payload })
     },
     getAll() {
-        return api.get('/reminders/')
+        return apiRequest('/reminders/')
     },
     remove(id) {
-        return api.delete(`/reminders/${id}`)
+        return apiRequest(`/reminders/${id}`, { method: 'DELETE' })
     },
 }
 

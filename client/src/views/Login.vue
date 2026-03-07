@@ -1,14 +1,14 @@
 <template>
   <section class="auth-container">
-    <div class="card auth-card">
+    <div class="auth-card">
       <h2>Giriş Yap</h2>
-      <form @submit.prevent="submit">
+      <form @submit.prevent="submit" class="inline-form" style="margin-top: .8rem;">
         <input v-model="form.email" type="email" placeholder="E-posta" required />
         <input v-model="form.password" type="password" placeholder="Şifre" required />
         <button type="submit" :disabled="loading">{{ loading ? 'Giriş...' : 'Giriş Yap' }}</button>
       </form>
-      <p class="error" v-if="error">{{ error }}</p>
-      <router-link to="/register">Hesabın yok mu? Kayıt ol.</router-link>
+      <p class="error" v-if="error" style="margin-top: .7rem;">{{ error }}</p>
+      <router-link to="/register" style="display:block; margin-top:.8rem;">Hesabın yok mu? Kayıt ol.</router-link>
     </div>
   </section>
 </template>
@@ -31,11 +31,11 @@ async function submit() {
     loading.value = true
     error.value = ''
 
-    const loginRes = await authService.login(form)
-    userStore.setToken(loginRes.data.data.token)
+    const loginData = await authService.login(form)
+    userStore.setToken(loginData.data.token)
 
-    const meRes = await authService.me()
-    userStore.setProfile(meRes.data.data)
+    const meData = await authService.me()
+    userStore.setProfile(meData.data)
 
     router.push('/dashboard')
   } catch (err) {
