@@ -117,7 +117,7 @@ func GenerateTransactionPDF(vm *viewmodel.TransactionReceiptPDFVM) ([]byte, erro
 	row("Varlık", info.Label)
 	row("Tip", typeChange(vm.Type))
 	row("Miktar", fmt.Sprintf("%.4f %s", vm.Amount, info.Unit))
-	row("Birim Fiyat", fmt.Sprintf("%.4f", vm.UnitPrice))
+	row("Birim Fiyat", fmt.Sprintf("%.4f ₺", vm.UnitPrice))
 	row("Toplam", fmt.Sprintf("%.4f %s", vm.TotalPrice, base.Unit))
 
 	row(

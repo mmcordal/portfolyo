@@ -1,4 +1,4 @@
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { extractErrorMessage } from '../api'
 import { authService, assetService, downloadBlob, reminderService, transactionService } from '../services/portfolio'
 
@@ -21,9 +21,20 @@ function setOk(status, message) {
     status.ok = message
 }
 
+function toTimestamp(value) {
+    const parsed = new Date(value).getTime()
+    return Number.isNaN(parsed) ? 0 : parsed
+}
+
 export function useDashboardData(userStore) {
     const currency = ref('try')
     const txAssetFilter = ref('')
+    const txTypeFilter = ref('')
+    const txSearch = ref('')
+    const txDateFrom = ref('')
+    const txDateTo = ref('')
+    const txPage = ref(1)
+    const txPerPage = ref(6)
 
     const assetsAll = ref(null)
     const singleAsset = ref(null)
@@ -42,6 +53,58 @@ export function useDashboardData(userStore) {
         reminders: createStatusState(),
         profile: createStatusState(),
     })
+
+    const sortedTransactions = computed(() => {
+        return [...transactions.value].sort((a, b) => toTimestamp(b.created_at) - toTimestamp(a.created_at))
+    })
+
+    const filteredTransactions = computed(() => {
+        const fromTs = txDateFrom.value ? toTimestamp(`${txDateFrom.value}T00:00:00`) : null
+        const toTs = txDateTo.value ? toTimestamp(`${txDateTo.value}T23:59:59`) : null
+        const search = txSearch.value.trim().toLowerCase()
+
+        return sortedTransactions.value.filter((tx) => {
+            if (txTypeFilter.value && String(tx.type).toLowerCase() !== txTypeFilter.value.toLowerCase()) {
+                return false
+            }
+
+            const createdAtTs = toTimestamp(tx.created_at)
+            if (fromTs !== null && createdAtTs < fromTs) return false
+            if (toTs !== null && createdAtTs > toTs) return false
+
+            if (!search) return true
+            const haystack = [
+                tx.id,
+                tx.type,
+                tx.description,
+                tx.user_asset?.asset,
+                tx.transaction_date,
+            ].join(' ').toLowerCase()
+            return haystack.includes(search)
+        })
+    })
+
+    const totalTxPages = computed(() => {
+        return Math.max(1, Math.ceil(filteredTransactions.value.length / txPerPage.value))
+    })
+
+    const pagedTransactions = computed(() => {
+        const start = (txPage.value - 1) * txPerPage.value
+        return filteredTransactions.value.slice(start, start + txPerPage.value)
+    })
+
+    watch([filteredTransactions, txPerPage], () => {
+        if (txPage.value > totalTxPages.value) {
+            txPage.value = totalTxPages.value
+        }
+        if (txPage.value < 1) {
+            txPage.value = 1
+        }
+    })
+
+    function resetTxPagination() {
+        txPage.value = 1
+    }
 
     async function bootstrap() {
         try {
@@ -117,6 +180,7 @@ export function useDashboardData(userStore) {
                 ? await transactionService.getByAsset(txAssetFilter.value, currency.value)
                 : await transactionService.getAll(currency.value)
             transactions.value = res.data || []
+            resetTxPagination()
         } catch (err) {
             setError(status.tx, err)
         }
@@ -220,9 +284,18 @@ export function useDashboardData(userStore) {
     return {
         currency,
         txAssetFilter,
+        txTypeFilter,
+        txSearch,
+        txDateFrom,
+        txDateTo,
+        txPage,
+        txPerPage,
         assetsAll,
         singleAsset,
         transactions,
+        filteredTransactions,
+        pagedTransactions,
+        totalTxPages,
         reminders,
         txForm,
         reminderForm,

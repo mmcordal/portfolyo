@@ -92,7 +92,9 @@ func (r *transactionRepository) GetTransactionByIDAndUserID(ctx context.Context,
 	err := r.db.NewSelect().
 		Model(tx).
 		Where("t.id = ?", txID).
-		Where("ua.user_id = ?", userID).
+		Relation("UserAsset", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("user_id = ?", userID)
+		}).
 		Relation("UserAsset.User").
 		Scan(ctx)
 	if err != nil {

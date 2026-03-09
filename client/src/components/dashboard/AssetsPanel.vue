@@ -111,6 +111,13 @@ const barData = computed(() => ({
   }],
 }))
 
+function extractTooltipNumericValue(context) {
+  if (typeof context.parsed === 'number') return context.parsed
+  if (typeof context.parsed?.y === 'number') return context.parsed.y
+  if (typeof context.raw === 'number') return context.raw
+  return 0
+}
+
 const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
@@ -119,7 +126,7 @@ const chartOptions = computed(() => ({
     tooltip: {
       callbacks: {
         label(context) {
-          const value = formatNumber(context.parsed || context.raw)
+          const value = formatNumber(extractTooltipNumericValue(context))
           const code = props.assetsAll?.currency?.toUpperCase() || ''
           return `${context.label}: ${value} ${code}`
         },
