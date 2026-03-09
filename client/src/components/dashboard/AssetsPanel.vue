@@ -1,14 +1,14 @@
 <template>
   <AppCard title="Portföy" subtitle="Varlık dağılımınızı grafik ve tabloyla takip edin">
     <template #actions>
-      <button @click="$emit('download-pdf')">Portföy PDF</button>
+      <button class="secondary" @click="$emit('download-pdf')">Portföy PDF</button>
     </template>
 
     <StatusBanner type="error" :message="status.error" />
     <StatusBanner type="ok" :message="status.ok" />
 
     <div class="toolbar">
-      <label>Hedef Para</label>
+      <label>Hedef Para Birimi</label>
       <select :value="currency" @change="$emit('currency-change', $event.target.value)">
         <option v-for="c in currencies" :key="c" :value="c">{{ c.toUpperCase() }}</option>
       </select>
@@ -35,7 +35,7 @@
         <td>{{ formatNumber(asset.amount, 4) }}</td>
         <td>{{ formatNumber(asset.price) }}</td>
         <td>{{ formatNumber(asset.total_price_by_asset) }}</td>
-        <td><button @click="$emit('show-asset', asset.asset)">Detay</button></td>
+        <td><button class="secondary" @click="$emit('show-asset', asset.asset)">Detay</button></td>
       </tr>
       </tbody>
     </table>

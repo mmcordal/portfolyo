@@ -1,8 +1,14 @@
 <template>
   <main class="page">
     <div class="hero">
-      <h1>Finans Paneli</h1>
-      <p>Tüm varlıklarınızı tek grafikte izleyin, işlemleri ve hatırlatıcıları yönetin.</p>
+      <div>
+        <h1>Finans Paneli</h1>
+        <p>Tüm varlıklarınızı tek grafikte izleyin, işlemleri ve hatırlatıcıları yönetin.</p>
+      </div>
+      <div class="hero-badges">
+        <span>{{ transactions.length }} işlem</span>
+        <span>{{ reminders.length }} hatırlatıcı</span>
+      </div>
     </div>
 
     <StatusBanner type="error" :message="status.page.error" />
@@ -155,6 +161,11 @@ onMounted(async () => {
 <style scoped>
 .hero {
   margin: .25rem 0 .2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+  flex-wrap: wrap;
 }
 .hero h1 {
   margin: 0;
@@ -163,6 +174,18 @@ onMounted(async () => {
 .hero p {
   margin: .2rem 0 0;
   color: var(--color-muted);
+}
+.hero-badges {
+  display: flex;
+  gap: .45rem;
+}
+.hero-badges span {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 999px;
+  padding: .3rem .65rem;
+  font-size: .78rem;
+  color: #dbeafe;
 }
 .layout {
   display: grid;

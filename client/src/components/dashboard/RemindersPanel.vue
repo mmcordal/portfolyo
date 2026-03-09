@@ -7,7 +7,7 @@
       <form class="inline-form" @submit.prevent="$emit('create')">
         <h3>Yeni Hatırlatıcı</h3>
         <input v-model="reminderForm.title" type="text" placeholder="Başlık" required />
-        <input v-model="reminderForm.date" type="datetime-local" />
+        <input v-model="reminderForm.date" type="datetime-local" required />
         <button :disabled="loadingReminder">{{ loadingReminder ? 'Ekleniyor...' : 'Ekle' }}</button>
       </form>
 
@@ -20,7 +20,7 @@
               <p>{{ formatDate(r.date) }}</p>
               <span class="tag" :class="getReminderMeta(r.date).tone">{{ getReminderMeta(r.date).label }}</span>
             </div>
-            <button class="danger" @click="$emit('delete', r.id)">Sil</button>
+            <button class="danger ghost" @click="$emit('delete', r.id)">Sil</button>
           </li>
         </ul>
         <p v-else class="subtle">Hatırlatıcı bulunamadı.</p>

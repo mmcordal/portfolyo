@@ -8,6 +8,7 @@
     --color-danger: #ef4444;
     --color-text: #f8fafc;
     --color-muted: #a5b4cf;
+    --color-border: rgba(71, 85, 105, 0.7);
     --radius: 14px;
     font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
@@ -31,7 +32,7 @@ a:hover { text-decoration: underline; }
 .page {
     max-width: 1180px;
     margin: 0 auto;
-    padding: 1.2rem 1rem 2rem;
+    padding: 1.2rem 1rem 2.4rem;
     display: grid;
     gap: 1rem;
 }
@@ -74,11 +75,20 @@ button {
 button:hover { transform: translateY(-1px); filter: brightness(1.06); }
 button:disabled { opacity: .65; cursor: not-allowed; transform: none; }
 button.danger { background: linear-gradient(180deg, #f87171, var(--color-danger)); }
+button.secondary {
+    background: rgba(30, 41, 59, 0.65);
+    border: 1px solid var(--color-border);
+    color: #dbeafe;
+}
+button.ghost {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+}
 
 input, select {
     width: 100%;
     border-radius: 10px;
-    border: 1px solid var(--color-surface-light);
+    border: 1px solid var(--color-border);
     background: rgba(2, 6, 23, 0.62);
     color: var(--color-text);
     padding: 0.66rem;
@@ -97,12 +107,18 @@ input:focus, select:focus {
     margin-bottom: .8rem;
 }
 
+label {
+    font-size: .78rem;
+    color: #cbd5e1;
+    margin-top: .15rem;
+}
+
 table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 0.9rem;
-    border: 1px solid var(--color-surface-light);
+    border: 1px solid var(--color-border);
     border-radius: 10px;
     overflow: hidden;
 }
@@ -131,7 +147,7 @@ th {
     justify-content: space-between;
     align-items: center;
     gap: .6rem;
-    border: 1px solid var(--color-surface-light);
+    border: 1px solid var(--color-border);
     border-radius: 10px;
     padding: .6rem;
     background: rgba(15, 23, 42, 0.65);
@@ -140,3 +156,15 @@ th {
 .summary { color: #bfdbfe; margin-bottom: .65rem; }
 .error { color: #fecaca; }
 .ok { color: #bbf7d0; }
+
+@media (max-width: 760px) {
+    .page {
+        padding: 1rem .75rem 2rem;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}

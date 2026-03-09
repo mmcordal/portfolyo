@@ -44,4 +44,13 @@ const variantClass = computed(() => `app-card--${props.variant}`)
   border-color: rgba(59, 130, 246, 0.6);
   background: linear-gradient(160deg, rgba(59, 130, 246, 0.22), rgba(30, 41, 59, 0.9));
 }
+
+@media (max-width: 760px) {
+  .app-card {
+    padding: .85rem;
+  }
+  .app-card__head {
+    flex-direction: column;
+  }
+}
 </style>

@@ -50,8 +50,8 @@
             <option :value="12">12 / sayfa</option>
           </select>
 
-          <button @click="$emit('refresh')">İşlemleri Yenile</button>
-          <button @click="$emit('download-excel')">Excel İndir</button>
+          <button class="secondary" @click="$emit('refresh')">İşlemleri Yenile</button>
+          <button class="secondary" @click="$emit('download-excel')">Excel İndir</button>
         </div>
       </div>
     </div>
@@ -71,7 +71,7 @@
         <td>{{ formatDate(tx.transaction_date) }}</td>
         <td>{{ formatNumber(tx.target_currency_price) }}</td>
         <td>{{ formatNumber(tx.target_currency_total_price) }} {{ tx.now_target_currency?.toUpperCase() }}</td>
-        <td><button @click="$emit('download-pdf', tx.id)">PDF</button></td>
+        <td><button class="secondary" @click="$emit('download-pdf', tx.id)">PDF</button></td>
       </tr>
       </tbody>
     </table>

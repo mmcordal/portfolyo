@@ -8,11 +8,11 @@ export const ASSET_TYPES = [
     { value: 'yarim-altin', label: 'Yarım Altın' },
     { value: 'tam-altin', label: 'Tam Altın' },
     { value: 'cumhuriyet-altini', label: 'Cumhuriyet Altını' },
-    { value: 'bilezik-22', label: '22 Ayar Bilezik' },
-    { value: 'gram-altin-14', label: '14 Ayar Gram Altın' },
-    { value: 'gram-altin-18', label: '18 Ayar Gram Altın' },
-    { value: 'gram-altin-22', label: '22 Ayar Gram Altın' },
-    { value: 'gram-altin-24', label: '24 Ayar Gram Altın' },
+    { value: '22-ayar-bilezik', label: '22 Ayar Bilezik' },
+    { value: '14-ayar-altin', label: '14 Ayar Gram Altın' },
+    { value: '18-ayar-altin', label: '18 Ayar Gram Altın' },
+    { value: '22-ayar-altin', label: '22 Ayar Gram Altın' },
+    { value: 'gram-altin', label: '24 Ayar Gram Altın' },
     { value: 'gumus', label: 'Gümüş' },
 ]
 
