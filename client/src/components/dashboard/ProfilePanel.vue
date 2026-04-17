@@ -1,7 +1,7 @@
 <template>
   <AppCard title="Profil" subtitle="Hesap bilgilerinizi güncelleyin" variant="highlight">
     <template #actions>
-      <button class="danger" :disabled="loading" @click="$emit('delete')">Hesabı Sil</button>
+      <button class="danger" :disabled="profileDomain.loading.value" @click="profileDomain.deleteProfile">Hesabı Sil</button>
     </template>
 
     <div class="profile-head">
@@ -9,15 +9,15 @@
       <span>{{ email }}</span>
     </div>
 
-    <StatusBanner type="error" :message="status.error" />
-    <StatusBanner type="ok" :message="status.ok" />
+    <StatusBanner type="error" :message="profileDomain.status.error" />
+    <StatusBanner type="ok" :message="profileDomain.status.ok" />
 
-    <form class="inline-form" @submit.prevent="$emit('update')">
-      <input v-model="form.name" placeholder="Yeni ad" />
-      <input v-model="form.surname" placeholder="Yeni soyad" />
-      <input v-model="form.email" type="email" placeholder="Yeni e-posta" />
-      <input v-model="form.password" type="password" placeholder="Yeni şifre" />
-      <button :disabled="loading">{{ loading ? 'Kaydediliyor...' : 'Profili Güncelle' }}</button>
+    <form class="inline-form" @submit.prevent="profileDomain.updateProfile">
+      <input v-model="profileDomain.form.name" placeholder="Yeni ad" />
+      <input v-model="profileDomain.form.surname" placeholder="Yeni soyad" />
+      <input v-model="profileDomain.form.email" type="email" placeholder="Yeni e-posta" />
+      <input v-model="profileDomain.form.password" type="password" placeholder="Yeni şifre" />
+      <button :disabled="profileDomain.loading.value">{{ profileDomain.loading.value ? 'Kaydediliyor...' : 'Profili Güncelle' }}</button>
     </form>
   </AppCard>
 </template>
@@ -29,12 +29,8 @@ import StatusBanner from '../ui/StatusBanner.vue'
 defineProps({
   fullName: { type: String, default: '-' },
   email: { type: String, default: '' },
-  form: { type: Object, required: true },
-  loading: { type: Boolean, default: false },
-  status: { type: Object, default: () => ({ ok: '', error: '' }) },
+  profileDomain: { type: Object, required: true },
 })
-
-defineEmits(['update', 'delete'])
 </script>
 
 <style scoped>

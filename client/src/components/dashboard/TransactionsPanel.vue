@@ -1,69 +1,70 @@
 <template>
   <AppCard title="İşlemler" subtitle="Ekleme, filtreleme ve raporlama">
-    <StatusBanner type="error" :message="status.error" />
-    <StatusBanner type="ok" :message="status.ok" />
+    <StatusBanner type="error" :message="transactionsDomain.status.error" />
+    <StatusBanner type="ok" :message="transactionsDomain.status.ok" />
 
     <div class="grid two-col">
       <form class="inline-form" @submit.prevent="$emit('create')">
         <h3>Yeni İşlem</h3>
-        <select v-model="txForm.type" required>
+        <select v-model="transactionsDomain.txForm.type" required>
           <option v-for="a in actionTypes" :key="a.value" :value="a.value">{{ a.label }}</option>
         </select>
-        <select v-model="txForm.asset" required>
+        <select v-model="transactionsDomain.txForm.asset" required>
           <option value="">Varlık seçin</option>
           <option v-for="a in assetTypes" :key="a.value" :value="a.value">{{ a.label }}</option>
         </select>
-        <input v-model.number="txForm.amount" type="number" min="0.0001" step="0.0001" placeholder="Miktar" required />
-        <input v-model="txForm.transaction_date" type="datetime-local" />
-        <input v-model="txForm.description" type="text" placeholder="Açıklama" />
-        <button :disabled="loadingTx">{{ loadingTx ? 'Kaydediliyor...' : 'Kaydet' }}</button>
+        <input v-model.number="transactionsDomain.txForm.amount" type="number" min="0.0001" step="0.0001" placeholder="Miktar" required />
+        <input v-model="transactionsDomain.txForm.transaction_date" type="datetime-local" />
+        <input v-model="transactionsDomain.txForm.description" type="text" placeholder="Açıklama" />
+        <button :disabled="transactionsDomain.loading.value">{{ transactionsDomain.loading.value ? 'Kaydediliyor...' : 'Kaydet' }}</button>
       </form>
 
       <div>
         <h3>Filtreler & Dışa Aktar</h3>
         <div class="toolbar two-col">
-          <select :value="txAssetFilter" @change="$emit('asset-filter-change', $event.target.value)">
+          <select v-model="transactionsDomain.filters.asset">
             <option value="">Tüm Varlıklar</option>
             <option v-for="a in assetTypes" :key="a.value" :value="a.value">{{ a.label }}</option>
           </select>
 
-          <select :value="txTypeFilter" @change="$emit('type-filter-change', $event.target.value)">
+          <select v-model="transactionsDomain.filters.type">
             <option value="">Tüm Tipler</option>
             <option value="add">Ekle</option>
             <option value="subtract">Çıkar</option>
           </select>
 
-          <input :value="txDateFrom" type="date" @input="$emit('date-from-change', $event.target.value)" />
-          <input :value="txDateTo" type="date" @input="$emit('date-to-change', $event.target.value)" />
+          <input v-model="transactionsDomain.filters.dateFrom" type="date" />
+          <input v-model="transactionsDomain.filters.dateTo" type="date" />
 
           <input
-              :value="txSearch"
+              v-model="transactionsDomain.filters.search"
               type="text"
               placeholder="ID / açıklama / varlık ara"
-              @input="$emit('search-change', $event.target.value)"
           />
 
-          <select :value="txPerPage" @change="$emit('per-page-change', Number($event.target.value))">
+          <select :value="transactionsDomain.filters.perPage" @change="transactionsDomain.setPerPage(Number($event.target.value))">
             <option :value="3">3 / sayfa</option>
             <option :value="6">6 / sayfa</option>
             <option :value="9">9 / sayfa</option>
             <option :value="12">12 / sayfa</option>
           </select>
 
-          <button class="secondary" @click="$emit('refresh')">İşlemleri Yenile</button>
-          <button class="secondary" @click="$emit('download-excel')">Excel İndir</button>
+          <button class="secondary" @click="transactionsDomain.fetchTransactions">İşlemleri Yenile</button>
+          <button class="secondary" @click="transactionsDomain.downloadTxExcel">Excel İndir</button>
         </div>
       </div>
     </div>
 
-    <p class="subtle" v-if="transactions.length">Toplam sonuç: {{ totalFilteredCount }}</p>
+    <p class="subtle" v-if="transactionsDomain.pagedTransactions.value.length">
+      Toplam sonuç: {{ transactionsDomain.filteredTransactions.value.length }}
+    </p>
 
-    <table v-if="transactions.length">
+    <table v-if="transactionsDomain.pagedTransactions.value.length">
       <thead>
       <tr><th>ID</th><th>Tip</th><th>Miktar</th><th>Oluşturulma</th><th>İşlem Tarihi</th><th>Kur</th><th>Toplam</th><th></th></tr>
       </thead>
       <tbody>
-      <tr v-for="tx in transactions" :key="tx.id">
+      <tr v-for="tx in transactionsDomain.pagedTransactions.value" :key="tx.id">
         <td>{{ tx.id }}</td>
         <td>{{ tx.type }}</td>
         <td>{{ formatNumber(tx.amount, 4) }}</td>
@@ -71,16 +72,16 @@
         <td>{{ formatDate(tx.transaction_date) }}</td>
         <td>{{ formatNumber(tx.target_currency_price) }}</td>
         <td>{{ formatNumber(tx.target_currency_total_price) }} {{ tx.now_target_currency?.toUpperCase() }}</td>
-        <td><button class="secondary" @click="$emit('download-pdf', tx.id)">PDF</button></td>
+        <td><button class="secondary" @click="transactionsDomain.downloadTxPdf(tx.id)">PDF</button></td>
       </tr>
       </tbody>
     </table>
     <p v-else class="subtle">İşlem bulunamadı.</p>
 
-    <div class="pager" v-if="totalTxPages > 1">
-      <button :disabled="txPage <= 1" @click="$emit('page-change', txPage - 1)">Önceki</button>
-      <span>Sayfa {{ txPage }} / {{ totalTxPages }}</span>
-      <button :disabled="txPage >= totalTxPages" @click="$emit('page-change', txPage + 1)">Sonraki</button>
+    <div class="pager" v-if="transactionsDomain.totalPages.value > 1">
+      <button :disabled="transactionsDomain.filters.page <= 1" @click="transactionsDomain.setPage(transactionsDomain.filters.page - 1)">Önceki</button>
+      <span>Sayfa {{ transactionsDomain.filters.page }} / {{ transactionsDomain.totalPages.value }}</span>
+      <button :disabled="transactionsDomain.filters.page >= transactionsDomain.totalPages.value" @click="transactionsDomain.setPage(transactionsDomain.filters.page + 1)">Sonraki</button>
     </div>
   </AppCard>
 </template>
@@ -91,36 +92,12 @@ import StatusBanner from '../ui/StatusBanner.vue'
 import { formatDate, formatNumber } from '../../utils/format'
 
 defineProps({
-  txForm: { type: Object, required: true },
-  txAssetFilter: { type: String, required: true },
-  txTypeFilter: { type: String, required: true },
-  txSearch: { type: String, required: true },
-  txDateFrom: { type: String, required: true },
-  txDateTo: { type: String, required: true },
-  txPage: { type: Number, required: true },
-  txPerPage: { type: Number, required: true },
-  totalTxPages: { type: Number, required: true },
-  totalFilteredCount: { type: Number, required: true },
-  transactions: { type: Array, required: true },
+  transactionsDomain: { type: Object, required: true },
   actionTypes: { type: Array, required: true },
   assetTypes: { type: Array, required: true },
-  loadingTx: { type: Boolean, default: false },
-  status: { type: Object, default: () => ({ ok: '', error: '' }) },
 })
 
-defineEmits([
-  'create',
-  'asset-filter-change',
-  'type-filter-change',
-  'search-change',
-  'date-from-change',
-  'date-to-change',
-  'per-page-change',
-  'page-change',
-  'refresh',
-  'download-excel',
-  'download-pdf',
-])
+defineEmits(['create'])
 </script>
 
 <style scoped>

@@ -8,11 +8,7 @@
     <ProfilePanel
         :full-name="userStore.fullName"
         :email="userStore.profile?.email"
-        :form="profileForm"
-        :loading="loading.profile"
-        :status="status.profile"
-        @update="updateProfile"
-        @delete="deleteProfile"
+        :profile-domain="profile"
     />
   </main>
 </template>
@@ -24,10 +20,10 @@ import { useDashboardData } from '../composables/useDashboardData'
 import { useUserStore } from '../stores/user'
 
 const userStore = useUserStore()
-const { profileForm, loading, status, bootstrap, updateProfile, deleteProfile } = useDashboardData(userStore)
+const { profile, bootstrap } = useDashboardData(userStore)
 
 onMounted(async () => {
-  await bootstrap()
+  await bootstrap({ includeDashboardData: false })
 })
 </script>
 

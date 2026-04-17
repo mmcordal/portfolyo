@@ -1,20 +1,22 @@
 <template>
   <AppCard title="Portföy" subtitle="Varlık dağılımınızı grafik ve tabloyla takip edin">
     <template #actions>
-      <button class="secondary" @click="$emit('download-pdf')">Portföy PDF</button>
+      <button class="secondary" @click="assets.downloadAssetsPdf">Portföy PDF</button>
     </template>
 
-    <StatusBanner type="error" :message="status.error" />
-    <StatusBanner type="ok" :message="status.ok" />
+    <StatusBanner type="error" :message="assets.status.error" />
+    <StatusBanner type="ok" :message="assets.status.ok" />
 
     <div class="toolbar">
       <label>Hedef Para Birimi</label>
-      <select :value="currency" @change="$emit('currency-change', $event.target.value)">
+      <select :value="assets.currency.value" @change="$emit('currency-change', $event.target.value)">
         <option v-for="c in currencies" :key="c" :value="c">{{ c.toUpperCase() }}</option>
       </select>
     </div>
 
-    <p class="summary" v-if="assetsAll">Toplam: {{ formatNumber(assetsAll.total_price) }} {{ assetsAll.currency?.toUpperCase() }}</p>
+    <p class="summary" v-if="assets.assetsAll.value">
+      Toplam: {{ formatNumber(assets.assetsAll.value.total_price) }} {{ assets.assetsAll.value.currency?.toUpperCase() }}
+    </p>
 
     <div class="charts" v-if="hasAssets">
       <div class="chart-box">
@@ -30,22 +32,22 @@
     <table v-if="hasAssets">
       <thead><tr><th>Varlık</th><th>Miktar</th><th>Birim</th><th>Toplam</th><th></th></tr></thead>
       <tbody>
-      <tr v-for="asset in assetsAll.assets" :key="asset.id">
+      <tr v-for="asset in assets.assetsAll.value.assets" :key="asset.id">
         <td>{{ asset.asset.toUpperCase() }}</td>
         <td>{{ formatNumber(asset.amount, 4) }}</td>
         <td>{{ formatNumber(asset.price) }}</td>
         <td>{{ formatNumber(asset.total_price_by_asset) }}</td>
-        <td><button class="secondary" @click="$emit('show-asset', asset.asset)">Detay</button></td>
+        <td><button class="secondary" @click="assets.fetchSingleAsset(asset.asset)">Detay</button></td>
       </tr>
       </tbody>
     </table>
     <p v-else class="subtle">Henüz varlık kaydı yok.</p>
 
-    <div class="asset-detail" v-if="singleAsset">
-      <h3>{{ singleAsset.asset.toUpperCase() }} Detayı</h3>
-      <p>{{ formatNumber(singleAsset.total_price_by_asset) }} {{ singleAsset.target_currency?.toUpperCase() }}</p>
-      <ul class="list" v-if="singleAsset.transactions?.length">
-        <li v-for="tx in singleAsset.transactions" :key="tx.id">
+    <div class="asset-detail" v-if="assets.singleAsset.value">
+      <h3>{{ assets.singleAsset.value.asset.toUpperCase() }} Detayı</h3>
+      <p>{{ formatNumber(assets.singleAsset.value.total_price_by_asset) }} {{ assets.singleAsset.value.target_currency?.toUpperCase() }}</p>
+      <ul class="list" v-if="assets.singleAsset.value.transactions?.length">
+        <li v-for="tx in assets.singleAsset.value.transactions" :key="tx.id">
           <span>{{ tx.type }}</span>
           <span>{{ formatNumber(tx.amount, 4) }}</span>
           <span>{{ formatDate(tx.transaction_date) }}</span>
@@ -75,16 +77,13 @@ import { formatDate, formatNumber } from '../../utils/format'
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, LinearScale, BarElement)
 
 const props = defineProps({
-  assetsAll: { type: Object, default: null },
-  singleAsset: { type: Object, default: null },
-  currency: { type: String, required: true },
+  assets: { type: Object, required: true },
   currencies: { type: Array, required: true },
-  status: { type: Object, default: () => ({ ok: '', error: '' }) },
 })
 
-defineEmits(['download-pdf', 'currency-change', 'show-asset'])
+defineEmits(['currency-change'])
 
-const chartAssets = computed(() => props.assetsAll?.assets || [])
+const chartAssets = computed(() => props.assets.assetsAll.value?.assets || [])
 const hasAssets = computed(() => chartAssets.value.length > 0)
 const labels = computed(() => chartAssets.value.map((asset) => asset.asset.toUpperCase()))
 const totals = computed(() => chartAssets.value.map((asset) => Number(asset.total_price_by_asset || 0)))
@@ -93,7 +92,7 @@ const colorPalette = ['#3b82f6', '#22d3ee', '#f59e0b', '#34d399', '#f472b6', '#a
 const pieData = computed(() => ({
   labels: labels.value,
   datasets: [{
-    label: `Toplam (${props.assetsAll?.currency?.toUpperCase() || ''})`,
+    label: `Toplam (${props.assets.assetsAll.value?.currency?.toUpperCase() || ''})`,
     data: totals.value,
     backgroundColor: labels.value.map((_, index) => colorPalette[index % colorPalette.length]),
     borderColor: '#0f172a',
@@ -104,7 +103,7 @@ const pieData = computed(() => ({
 const barData = computed(() => ({
   labels: labels.value,
   datasets: [{
-    label: `Varlık Değeri (${props.assetsAll?.currency?.toUpperCase() || ''})`,
+    label: `Varlık Değeri (${props.assets.assetsAll.value?.currency?.toUpperCase() || ''})`,
     data: totals.value,
     backgroundColor: 'rgba(59, 130, 246, 0.75)',
     borderRadius: 8,
@@ -127,7 +126,7 @@ const chartOptions = computed(() => ({
       callbacks: {
         label(context) {
           const value = formatNumber(extractTooltipNumericValue(context))
-          const code = props.assetsAll?.currency?.toUpperCase() || ''
+          const code = props.assets.assetsAll.value?.currency?.toUpperCase() || ''
           return `${context.label}: ${value} ${code}`
         },
       },

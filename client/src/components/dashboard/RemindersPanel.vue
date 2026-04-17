@@ -1,26 +1,26 @@
 <template>
   <AppCard title="Hatırlatıcılar" subtitle="Yaklaşan ve gecikmiş tarihleri takip edin">
-    <StatusBanner type="error" :message="status.error" />
-    <StatusBanner type="ok" :message="status.ok" />
+    <StatusBanner type="error" :message="remindersDomain.status.error" />
+    <StatusBanner type="ok" :message="remindersDomain.status.ok" />
 
     <div class="grid two-col">
-      <form class="inline-form" @submit.prevent="$emit('create')">
+      <form class="inline-form" @submit.prevent="remindersDomain.createReminder">
         <h3>Yeni Hatırlatıcı</h3>
-        <input v-model="reminderForm.title" type="text" placeholder="Başlık" required />
-        <input v-model="reminderForm.date" type="datetime-local" required />
-        <button :disabled="loadingReminder">{{ loadingReminder ? 'Ekleniyor...' : 'Ekle' }}</button>
+        <input v-model="remindersDomain.form.title" type="text" placeholder="Başlık" required />
+        <input v-model="remindersDomain.form.date" type="datetime-local" required />
+        <button :disabled="remindersDomain.loading.value">{{ remindersDomain.loading.value ? 'Ekleniyor...' : 'Ekle' }}</button>
       </form>
 
       <div>
         <h3>Liste</h3>
-        <ul class="list" v-if="reminders.length">
-          <li v-for="r in reminders" :key="r.id">
+        <ul class="list" v-if="remindersDomain.reminders.value.length">
+          <li v-for="r in remindersDomain.reminders.value" :key="r.id">
             <div>
               <strong>{{ r.title }}</strong>
               <p>{{ formatDate(r.date) }}</p>
               <span class="tag" :class="getReminderMeta(r.date).tone">{{ getReminderMeta(r.date).label }}</span>
             </div>
-            <button class="danger ghost" @click="$emit('delete', r.id)">Sil</button>
+            <button class="danger ghost" @click="remindersDomain.deleteReminder(r.id)">Sil</button>
           </li>
         </ul>
         <p v-else class="subtle">Hatırlatıcı bulunamadı.</p>
@@ -35,13 +35,8 @@ import StatusBanner from '../ui/StatusBanner.vue'
 import { formatDate } from '../../utils/format'
 
 defineProps({
-  reminderForm: { type: Object, required: true },
-  reminders: { type: Array, required: true },
-  loadingReminder: { type: Boolean, default: false },
-  status: { type: Object, default: () => ({ ok: '', error: '' }) },
+  remindersDomain: { type: Object, required: true },
 })
-
-defineEmits(['create', 'delete'])
 
 function getReminderMeta(dateValue) {
   const now = Date.now()
