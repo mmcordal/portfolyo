@@ -6,11 +6,24 @@ export function formatNumber(value, fraction = 2) {
     }).format(num)
 }
 
-export function formatDate(value) {
+export function formatDate(value, options = {}) {
     if (!value) return '-'
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return value
-    return date.toLocaleString('tr-TR')
+
+    const {
+        includeTime = true,
+        includeSeconds = false,
+    } = options
+
+    return date.toLocaleString('tr-TR', {
+        dateStyle: 'short',
+        ...(includeTime
+            ? {
+                timeStyle: includeSeconds ? 'medium' : 'short',
+            }
+            : {}),
+    })
 }
 
 export function toISODateTimeLocal(value) {

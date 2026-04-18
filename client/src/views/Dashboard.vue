@@ -11,6 +11,28 @@
       </div>
     </div>
 
+    <section class="summary-cards" aria-label="Dashboard özetleri">
+      <article class="summary-card">
+        <p>Toplam Portföy</p>
+        <strong>
+          {{ formatNumber(assets.assetsAll.value?.total_price || 0) }}
+          {{ assets.assetsAll.value?.currency?.toUpperCase() || '' }}
+        </strong>
+      </article>
+      <article class="summary-card">
+        <p>Varlık Sayısı</p>
+        <strong>{{ assets.assetsAll.value?.assets?.length || 0 }}</strong>
+      </article>
+      <article class="summary-card">
+        <p>Toplam İşlem</p>
+        <strong>{{ transactions.transactions.length }}</strong>
+      </article>
+      <article class="summary-card">
+        <p>Yaklaşan Hatırlatıcı</p>
+        <strong>{{ upcomingReminderCount }}</strong>
+      </article>
+    </section>
+
     <StatusBanner type="error" :message="pageStatus.error" />
 
     <div class="layout">
@@ -29,11 +51,11 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { ACTION_TYPES, ASSET_TYPES, CURRENCIES } from '../constants/assets'
 import { useDashboardData } from '../composables/useDashboardData'
 import { useUserStore } from '../stores/user'
-import { toISODateTimeLocal } from '../utils/format'
+import { formatNumber, toISODateTimeLocal } from '../utils/format'
 import AssetsPanel from '../components/dashboard/AssetsPanel.vue'
 import RemindersPanel from '../components/dashboard/RemindersPanel.vue'
 import TransactionsPanel from '../components/dashboard/TransactionsPanel.vue'
@@ -50,6 +72,11 @@ const {
   onCurrencyChange,
   createTransaction,
 } = useDashboardData(userStore)
+
+const upcomingReminderCount = computed(() => reminders.reminders.value.filter((item) => {
+  const timestamp = new Date(item.date).getTime()
+  return Number.isFinite(timestamp) && timestamp >= Date.now()
+}).length)
 
 onMounted(async () => {
   reminders.form.date = toISODateTimeLocal(new Date())
@@ -87,6 +114,31 @@ onMounted(async () => {
   font-size: .78rem;
   color: #1e3a8a;
   font-weight: 600;
+}
+.summary-cards {
+  display: grid;
+  gap: .65rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.summary-card {
+  border: 1px solid #d7e4f8;
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+  border-radius: 12px;
+  padding: .72rem .8rem;
+  box-shadow: var(--shadow-soft);
+}
+.summary-card p {
+  margin: 0;
+  color: #64748b;
+  font-size: .76rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+.summary-card strong {
+  display: inline-block;
+  margin-top: .28rem;
+  font-size: 1.03rem;
+  color: #0f2f73;
 }
 .layout {
   display: grid;

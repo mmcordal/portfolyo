@@ -15,12 +15,14 @@
         <h3>Liste</h3>
         <ul class="list" v-if="remindersDomain.reminders.value.length">
           <li v-for="r in remindersDomain.reminders.value" :key="r.id">
-            <div>
+            <div class="reminder-content">
               <strong>{{ r.title }}</strong>
-              <p>{{ formatDate(r.date) }}</p>
-              <span class="tag" :class="getReminderMeta(r.date).tone">{{ getReminderMeta(r.date).label }}</span>
+              <p>{{ formatDate(r.date, { includeSeconds: false }) }}</p>
             </div>
-            <button class="danger ghost" @click="remindersDomain.deleteReminder(r.id)">Sil</button>
+            <div class="reminder-actions">
+              <span class="tag" :class="getReminderMeta(r.date).tone">{{ getReminderMeta(r.date).label }}</span>
+              <button class="danger ghost" @click="remindersDomain.deleteReminder(r.id)">Sil</button>
+            </div>
           </li>
         </ul>
         <p v-else class="subtle">Hatırlatıcı bulunamadı.</p>
@@ -54,9 +56,18 @@ function getReminderMeta(dateValue) {
 <style scoped>
 h3 { margin: 0 0 .55rem; font-size: .95rem; }
 .subtle { color: var(--color-muted); }
+.reminder-content p {
+  margin-top: .2rem;
+  color: #475569;
+  font-size: .88rem;
+}
+.reminder-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+}
 .tag {
   display: inline-flex;
-  margin-top: .45rem;
   padding: .2rem .48rem;
   border-radius: 999px;
   font-size: .72rem;
@@ -67,4 +78,10 @@ h3 { margin: 0 0 .55rem; font-size: .95rem; }
 .tag.info { background: #e8f1ff; border-color: #bcd4ff; color: #1d4ed8; }
 .tag.warning { background: #fff7e8; border-color: #f9d9a0; color: #a16207; }
 .tag.danger { background: #fff1f1; border-color: #fecaca; color: #b91c1c; }
+@media (max-width: 760px) {
+  .reminder-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
 </style>

@@ -19,13 +19,13 @@
     </p>
 
     <div class="charts" v-if="hasAssets">
-      <div class="chart-box">
-        <h3>Dağılım (Pasta)</h3>
-        <Pie :data="pieData" :options="chartOptions" />
+      <div class="chart-box donut-box">
+        <h3>Dağılım (Donut)</h3>
+        <Pie :data="pieData" :options="donutOptions" />
       </div>
       <div class="chart-box">
         <h3>Varlık Değerleri (Çubuk)</h3>
-        <Bar :data="barData" :options="chartOptions" />
+        <Bar :data="barData" :options="barOptions" />
       </div>
     </div>
 
@@ -95,8 +95,9 @@ const pieData = computed(() => ({
     label: `Toplam (${props.assets.assetsAll.value?.currency?.toUpperCase() || ''})`,
     data: totals.value,
     backgroundColor: labels.value.map((_, index) => colorPalette[index % colorPalette.length]),
-    borderColor: '#f8fbff',
-    borderWidth: 1,
+    borderColor: '#ffffff',
+    borderWidth: 2,
+    hoverOffset: 6,
   }],
 }))
 
@@ -117,24 +118,68 @@ function extractTooltipNumericValue(context) {
   return 0
 }
 
-const chartOptions = computed(() => ({
+function tooltipLabel(context) {
+  const value = formatNumber(extractTooltipNumericValue(context))
+  const code = props.assets.assetsAll.value?.currency?.toUpperCase() || ''
+  return `${context.label}: ${value} ${code}`
+}
+
+const donutOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
+  cutout: '62%',
+  layout: {
+    padding: {
+      top: 4,
+      right: 8,
+      bottom: 4,
+      left: 8,
+    },
+  },
   plugins: {
-    legend: { labels: { color: '#334155' } },
+    legend: {
+      position: 'bottom',
+      labels: {
+        color: '#334155',
+        boxWidth: 12,
+        boxHeight: 12,
+        padding: 14,
+      },
+    },
     tooltip: {
       callbacks: {
-        label(context) {
-          const value = formatNumber(extractTooltipNumericValue(context))
-          const code = props.assets.assetsAll.value?.currency?.toUpperCase() || ''
-          return `${context.label}: ${value} ${code}`
-        },
+        label: tooltipLabel,
       },
     },
   },
   scales: {
-    x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(148, 163, 184, 0.2)' } },
-    y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(148, 163, 184, 0.2)' } },
+    x: { display: false, grid: { display: false }, ticks: { display: false } },
+    y: { display: false, grid: { display: false }, ticks: { display: false } },
+  },
+}))
+
+const barOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom',
+      labels: {
+        color: '#334155',
+        boxWidth: 12,
+        boxHeight: 12,
+        padding: 10,
+      },
+    },
+    tooltip: {
+      callbacks: {
+        label: tooltipLabel,
+      },
+    },
+  },
+  scales: {
+    x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(148, 163, 184, 0.16)' } },
+    y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(148, 163, 184, 0.22)' } },
   },
 }))
 </script>
@@ -158,7 +203,11 @@ const chartOptions = computed(() => ({
   background: #ffffff;
   border: 1px solid #dde7f7;
   border-radius: 12px;
-  padding: .68rem;
+  padding: .68rem .68rem .55rem;
+}
+.donut-box {
+  display: grid;
+  align-content: start;
 }
 .chart-box h3 {
   margin: 0 0 .45rem;
