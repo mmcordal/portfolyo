@@ -59,16 +59,16 @@ onMounted(async () => {
 
 <style scoped>
 .hero {
-  margin: .25rem 0 .2rem;
+  margin: .2rem 0 .1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: .7rem;
+  gap: .85rem;
   flex-wrap: wrap;
 }
 .hero h1 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.46rem;
 }
 .hero p {
   margin: .2rem 0 0;
@@ -79,15 +79,17 @@ onMounted(async () => {
   gap: .45rem;
 }
 .hero-badges span {
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid #cad8f2;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-soft);
   border-radius: 999px;
-  padding: .3rem .65rem;
+  padding: .34rem .7rem;
   font-size: .78rem;
-  color: #dbeafe;
+  color: #1e3a8a;
+  font-weight: 600;
 }
 .layout {
   display: grid;
-  gap: 1rem;
+  gap: 1.05rem;
 }
 </style>

@@ -26,14 +26,14 @@ const typeClass = computed(() => `status--${props.type}`)
   border: 1px solid transparent;
 }
 .status--ok {
-  background: rgba(34, 197, 94, 0.12);
-  border-color: rgba(34, 197, 94, 0.45);
-  color: #bbf7d0;
+  background: #eefbf2;
+  border-color: rgba(22, 163, 74, 0.3);
+  color: #166534;
 }
 .status--error {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.45);
-  color: #fecaca;
+  background: #fff2f2;
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #b91c1c;
 }
 .fade-enter-active, .fade-leave-active { transition: opacity .24s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }

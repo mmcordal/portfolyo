@@ -24,20 +24,21 @@ const userStore = useUserStore()
   align-items: center;
   padding: .9rem 1.15rem;
   backdrop-filter: blur(10px);
-  background: rgba(2, 6, 23, 0.72);
-  border-bottom: 1px solid rgba(37, 50, 82, .8);
+  background: rgba(248, 251, 255, 0.88);
+  border-bottom: 1px solid #d8e4f8;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
 }
 .brand {
-  background: transparent;
-  border: 1px solid rgba(59,130,246,.4);
-  color: #dbeafe;
+  background: #ffffff;
+  border: 1px solid #bfd4f8;
+  color: #1e3a8a;
   font-weight: 700;
   padding: .55rem .9rem;
 }
 .actions { display: flex; gap: .75rem; align-items: center; }
 .name-link {
-  background: transparent;
-  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #ffffff;
+  border: 1px solid #d1ddf1;
   color: var(--color-muted);
   font-weight: 600;
 }

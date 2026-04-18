@@ -2,13 +2,13 @@
   <section class="auth-container">
     <div class="auth-card">
       <h2>Giriş Yap</h2>
-      <form @submit.prevent="submit" class="inline-form" style="margin-top: .8rem;">
+      <form @submit.prevent="submit" class="inline-form auth-form">
         <input v-model="form.email" type="email" placeholder="E-posta" required />
         <input v-model="form.password" type="password" placeholder="Şifre" required />
         <button type="submit" :disabled="loading">{{ loading ? 'Giriş...' : 'Giriş Yap' }}</button>
       </form>
-      <p class="error" v-if="error" style="margin-top: .7rem;">{{ error }}</p>
-      <router-link to="/register" style="display:block; margin-top:.8rem;">Hesabın yok mu? Kayıt ol.</router-link>
+      <p class="error auth-feedback" v-if="error">{{ error }}</p>
+      <router-link to="/register" class="auth-link">Hesabın yok mu? Kayıt ol.</router-link>
     </div>
   </section>
 </template>

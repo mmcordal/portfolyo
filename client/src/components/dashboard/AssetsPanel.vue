@@ -87,7 +87,7 @@ const chartAssets = computed(() => props.assets.assetsAll.value?.assets || [])
 const hasAssets = computed(() => chartAssets.value.length > 0)
 const labels = computed(() => chartAssets.value.map((asset) => asset.asset.toUpperCase()))
 const totals = computed(() => chartAssets.value.map((asset) => Number(asset.total_price_by_asset || 0)))
-const colorPalette = ['#3b82f6', '#22d3ee', '#f59e0b', '#34d399', '#f472b6', '#a78bfa', '#f87171']
+const colorPalette = ['#3b82f6', '#38bdf8', '#f59e0b', '#34d399', '#f472b6', '#6366f1', '#fb7185']
 
 const pieData = computed(() => ({
   labels: labels.value,
@@ -95,7 +95,7 @@ const pieData = computed(() => ({
     label: `Toplam (${props.assets.assetsAll.value?.currency?.toUpperCase() || ''})`,
     data: totals.value,
     backgroundColor: labels.value.map((_, index) => colorPalette[index % colorPalette.length]),
-    borderColor: '#0f172a',
+    borderColor: '#f8fbff',
     borderWidth: 1,
   }],
 }))
@@ -121,7 +121,7 @@ const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { labels: { color: '#dbeafe' } },
+    legend: { labels: { color: '#334155' } },
     tooltip: {
       callbacks: {
         label(context) {
@@ -133,8 +133,8 @@ const chartOptions = computed(() => ({
     },
   },
   scales: {
-    x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.15)' } },
-    y: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.15)' } },
+    x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(148, 163, 184, 0.2)' } },
+    y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(148, 163, 184, 0.2)' } },
   },
 }))
 </script>
@@ -155,10 +155,10 @@ const chartOptions = computed(() => ({
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 .chart-box {
-  background: rgba(2, 6, 23, 0.45);
-  border: 1px solid var(--color-surface-light);
+  background: #ffffff;
+  border: 1px solid #dde7f7;
   border-radius: 12px;
-  padding: .6rem;
+  padding: .68rem;
 }
 .chart-box h3 {
   margin: 0 0 .45rem;

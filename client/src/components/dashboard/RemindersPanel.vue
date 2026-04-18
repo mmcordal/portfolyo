@@ -61,9 +61,10 @@ h3 { margin: 0 0 .55rem; font-size: .95rem; }
   border-radius: 999px;
   font-size: .72rem;
   border: 1px solid transparent;
+  font-weight: 600;
 }
-.tag.neutral { background: rgba(148, 163, 184, 0.15); border-color: rgba(148, 163, 184, 0.4); }
-.tag.info { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.45); color: #bfdbfe; }
-.tag.warning { background: rgba(245, 158, 11, 0.14); border-color: rgba(245, 158, 11, 0.4); color: #fde68a; }
-.tag.danger { background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.4); color: #fecaca; }
+.tag.neutral { background: #eff4fc; border-color: #c8d6ed; color: #475569; }
+.tag.info { background: #e8f1ff; border-color: #bcd4ff; color: #1d4ed8; }
+.tag.warning { background: #fff7e8; border-color: #f9d9a0; color: #a16207; }
+.tag.danger { background: #fff1f1; border-color: #fecaca; color: #b91c1c; }
 </style>
