@@ -1,34 +1,67 @@
 <template>
-  <main class="page">
-    <div class="hero">
-      <div>
+  <main class="page dashboard-page">
+    <section class="dashboard-hero">
+      <div class="hero-main">
+        <p class="eyebrow">Portföy Komuta Merkezi</p>
         <h1>Finans Paneli</h1>
-        <p>Tüm varlıklarınızı tek grafikte izleyin, işlemleri ve hatırlatıcıları yönetin.</p>
+        <p>
+          Portföy performansınızı tek bakışta görün, işlemleri yönetin ve hatırlatıcılarınızı aksatmadan takip edin.
+        </p>
+
+        <div class="hero-metrics">
+          <article>
+            <span>Toplam Portföy</span>
+            <strong>
+              {{ formatNumber(assets.assetsAll.value?.total_price || 0) }}
+              {{ assets.assetsAll.value?.currency?.toUpperCase() || '' }}
+            </strong>
+          </article>
+          <article>
+            <span>Toplam İşlem</span>
+            <strong>{{ transactions.transactions.length }}</strong>
+          </article>
+          <article>
+            <span>Yaklaşan Hatırlatıcı</span>
+            <strong>{{ upcomingReminderCount }}</strong>
+          </article>
+        </div>
       </div>
-      <div class="hero-badges">
-        <span>{{ transactions.transactions.length }} işlem</span>
-        <span>{{ reminders.reminders.length }} hatırlatıcı</span>
+
+      <div class="hero-actions-panel">
+        <label>Hedef Para Birimi</label>
+        <select :value="assets.currency.value" @change="onCurrencyChange($event.target.value)">
+          <option v-for="c in CURRENCIES" :key="c" :value="c">{{ c.toUpperCase() }}</option>
+        </select>
+
+        <button class="secondary" @click="assets.downloadAssetsPdf">Portföy PDF</button>
+        <button @click="isTxModalOpen = true">+ Yeni İşlem</button>
+        <button class="secondary" @click="isReminderModalOpen = true">+ Hatırlatıcı</button>
+
+        <div class="hero-badges">
+          <span>{{ assets.assetsAll.value?.assets?.length || 0 }} varlık</span>
+          <span>{{ reminders.reminders.value.length }} hatırlatıcı</span>
+        </div>
       </div>
-    </div>
+    </section>
 
     <section class="summary-cards" aria-label="Dashboard özetleri">
       <article class="summary-card">
-        <p>Toplam Portföy</p>
+        <p><span class="card-icon">💼</span> Portföy Büyüklüğü</p>
         <strong>
           {{ formatNumber(assets.assetsAll.value?.total_price || 0) }}
           {{ assets.assetsAll.value?.currency?.toUpperCase() || '' }}
         </strong>
       </article>
       <article class="summary-card">
-        <p>Varlık Sayısı</p>
+        <p><span class="card-icon">🪙</span> Varlık Sayısı</p>
         <strong>{{ assets.assetsAll.value?.assets?.length || 0 }}</strong>
       </article>
       <article class="summary-card">
-        <p>Toplam İşlem</p>
+        <p><span class="card-icon">🧾</span> Toplam İşlem</p>
         <strong>{{ transactions.transactions.length }}</strong>
       </article>
       <article class="summary-card">
-        <p>Yaklaşan Hatırlatıcı</p>
+        <p><span class="card-icon">⏰</span> Yaklaşan Hatırlatıcı</p>
         <strong>{{ upcomingReminderCount }}</strong>
       </article>
     </section>
@@ -42,16 +75,22 @@
           :transactions-domain="transactions"
           :action-types="ACTION_TYPES"
           :asset-types="ASSET_TYPES"
-          @create="createTransaction"
+          :open-create="isTxModalOpen"
+          @create="handleCreateTransaction"
+          @close-create="isTxModalOpen = false"
       />
 
-      <RemindersPanel :reminders-domain="reminders" />
+      <RemindersPanel
+          :reminders-domain="reminders"
+          :open-create="isReminderModalOpen"
+          @close-create="isReminderModalOpen = false"
+      />
     </div>
   </main>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ACTION_TYPES, ASSET_TYPES, CURRENCIES } from '../constants/assets'
 import { useDashboardData } from '../composables/useDashboardData'
 import { useUserStore } from '../stores/user'
@@ -62,6 +101,8 @@ import TransactionsPanel from '../components/dashboard/TransactionsPanel.vue'
 import StatusBanner from '../components/ui/StatusBanner.vue'
 
 const userStore = useUserStore()
+const isTxModalOpen = ref(false)
+const isReminderModalOpen = ref(false)
 
 const {
   assets,
@@ -78,6 +119,15 @@ const upcomingReminderCount = computed(() => reminders.reminders.value.filter((i
   return Number.isFinite(timestamp) && timestamp >= Date.now()
 }).length)
 
+
+
+async function handleCreateTransaction(onSuccessClose) {
+  await createTransaction()
+  if (!transactions.status.error && typeof onSuccessClose === 'function') {
+    onSuccessClose()
+  }
+}
+
 onMounted(async () => {
   reminders.form.date = toISODateTimeLocal(new Date())
   await bootstrap()
@@ -85,33 +135,82 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.hero {
-  margin: .2rem 0 .1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: .85rem;
-  flex-wrap: wrap;
+.dashboard-page {
+  gap: 1rem;
 }
-.hero h1 {
+.dashboard-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr);
+  gap: .9rem;
+  border: 1px solid #d5e3fb;
+  border-radius: 18px;
+  padding: 1rem;
+  background: linear-gradient(145deg, #ffffff, #f3f8ff);
+  box-shadow: var(--shadow-card);
+}
+.eyebrow {
+  display: inline-flex;
+  margin-bottom: .3rem;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  background: #e5efff;
+  color: #1e40af;
+  font-size: .72rem;
+  font-weight: 700;
+}
+.hero-main h1 {
   margin: 0;
-  font-size: 1.46rem;
+  font-size: 1.62rem;
 }
-.hero p {
-  margin: .2rem 0 0;
+.hero-main > p {
+  margin-top: .28rem;
   color: var(--color-muted);
+  max-width: 65ch;
 }
-.hero-badges {
+.hero-metrics {
+  margin-top: .85rem;
+  display: grid;
+  gap: .58rem;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+}
+.hero-metrics article {
+  border: 1px solid #d6e3fa;
+  border-radius: 12px;
+  padding: .62rem .7rem;
+  background: #ffffff;
+}
+.hero-metrics span {
+  display: block;
+  color: #64748b;
+  font-size: .76rem;
+}
+.hero-metrics strong {
+  display: block;
+  margin-top: .24rem;
+  color: #0f2f73;
+  font-size: 1.02rem;
+}
+.hero-actions-panel {
+  border: 1px solid #d7e3f8;
+  border-radius: 14px;
+  padding: .75rem;
+  background: #ffffff;
+  display: grid;
+  gap: .52rem;
+  align-content: start;
+}
+.hero-actions-panel .hero-badges {
   display: flex;
-  gap: .45rem;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-top: .1rem;
 }
 .hero-badges span {
   border: 1px solid #cad8f2;
   background: rgba(255, 255, 255, 0.86);
-  box-shadow: var(--shadow-soft);
   border-radius: 999px;
-  padding: .34rem .7rem;
-  font-size: .78rem;
+  padding: .3rem .62rem;
+  font-size: .76rem;
   color: #1e3a8a;
   font-weight: 600;
 }
@@ -133,7 +232,11 @@ onMounted(async () => {
   font-size: .76rem;
   font-weight: 600;
   letter-spacing: .02em;
+  display: flex;
+  gap: .35rem;
+  align-items: center;
 }
+.card-icon { font-size: .95rem; }
 .summary-card strong {
   display: inline-block;
   margin-top: .28rem;
@@ -143,5 +246,10 @@ onMounted(async () => {
 .layout {
   display: grid;
   gap: 1.05rem;
+}
+@media (max-width: 900px) {
+  .dashboard-hero {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
