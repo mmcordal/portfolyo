@@ -8,13 +8,18 @@
           Portföy performansınızı tek bakışta görün, işlemleri yönetin ve hatırlatıcılarınızı aksatmadan takip edin.
         </p>
 
+        <article class="hero-primary-metric">
+          <span>Toplam Portföy</span>
+          <strong>
+            {{ formatNumber(assets.assetsAll.value?.total_price || 0) }}
+            {{ assets.assetsAll.value?.currency?.toUpperCase() || '' }}
+          </strong>
+        </article>
+
         <div class="hero-metrics">
           <article>
-            <span>Toplam Portföy</span>
-            <strong>
-              {{ formatNumber(assets.assetsAll.value?.total_price || 0) }}
-              {{ assets.assetsAll.value?.currency?.toUpperCase() || '' }}
-            </strong>
+            <span>Varlık Sayısı</span>
+            <strong>{{ assets.assetsAll.value?.assets?.length || 0 }}</strong>
           </article>
           <article>
             <span>Toplam İşlem</span>
@@ -46,13 +51,6 @@
 
     <section class="summary-cards" aria-label="Dashboard özetleri">
       <article class="summary-card">
-        <p><span class="card-icon">💼</span> Portföy Büyüklüğü</p>
-        <strong>
-          {{ formatNumber(assets.assetsAll.value?.total_price || 0) }}
-          {{ assets.assetsAll.value?.currency?.toUpperCase() || '' }}
-        </strong>
-      </article>
-      <article class="summary-card">
         <p><span class="card-icon">🪙</span> Varlık Sayısı</p>
         <strong>{{ assets.assetsAll.value?.assets?.length || 0 }}</strong>
       </article>
@@ -64,11 +62,21 @@
         <p><span class="card-icon">⏰</span> Yaklaşan Hatırlatıcı</p>
         <strong>{{ upcomingReminderCount }}</strong>
       </article>
+      <article class="summary-card">
+        <p><span class="card-icon">🌍</span> Aktif Para Birimi</p>
+        <strong>{{ assets.currency.value.toUpperCase() }}</strong>
+      </article>
     </section>
 
     <StatusBanner type="error" :message="pageStatus.error" />
+    <StatusBanner type="ok" :message="pageStatus.ok" />
 
-    <div class="layout">
+    <section v-if="pageLoading" class="page-loading" aria-live="polite">
+      <strong>Dashboard hazırlanıyor...</strong>
+      <p>Varlıklar, işlemler ve hatırlatıcılar yükleniyor.</p>
+    </section>
+
+    <div class="layout" v-else>
       <AssetsPanel :assets="assets" :currencies="CURRENCIES" @currency-change="onCurrencyChange" />
 
       <TransactionsPanel
@@ -109,6 +117,7 @@ const {
   transactions,
   reminders,
   pageStatus,
+  pageLoading,
   bootstrap,
   onCurrencyChange,
   createTransaction,
@@ -118,8 +127,6 @@ const upcomingReminderCount = computed(() => reminders.reminders.value.filter((i
   const timestamp = new Date(item.date).getTime()
   return Number.isFinite(timestamp) && timestamp >= Date.now()
 }).length)
-
-
 
 async function handleCreateTransaction(onSuccessClose) {
   await createTransaction()
@@ -167,8 +174,25 @@ onMounted(async () => {
   color: var(--color-muted);
   max-width: 65ch;
 }
+.hero-primary-metric {
+  margin-top: .9rem;
+  border: 1px solid #d6e3fa;
+  border-radius: 14px;
+  padding: .72rem;
+  background: #ffffff;
+}
+.hero-primary-metric span {
+  font-size: .76rem;
+  color: #64748b;
+}
+.hero-primary-metric strong {
+  display: block;
+  margin-top: .24rem;
+  color: #0f2f73;
+  font-size: 1.2rem;
+}
 .hero-metrics {
-  margin-top: .85rem;
+  margin-top: .65rem;
   display: grid;
   gap: .58rem;
   grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
@@ -242,6 +266,16 @@ onMounted(async () => {
   margin-top: .28rem;
   font-size: 1.03rem;
   color: #0f2f73;
+}
+.page-loading {
+  border: 1px solid #cddbf5;
+  border-radius: 12px;
+  padding: .9rem;
+  background: #f8fbff;
+}
+.page-loading p {
+  margin-top: .25rem;
+  color: var(--color-muted);
 }
 .layout {
   display: grid;

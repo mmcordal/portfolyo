@@ -42,50 +42,72 @@
       </div>
     </section>
 
-    <p class="subtle" v-if="transactionsDomain.pagedTransactions.value.length">
-      Toplam sonuç: {{ transactionsDomain.filteredTransactions.value.length }}
-    </p>
+    <section v-if="transactionsDomain.listLoading.value" class="list-loading" aria-live="polite">
+      <strong>İşlemler yükleniyor...</strong>
+      <p>Filtrelenen sonuçlar hazırlanıyor.</p>
+    </section>
 
-    <div class="table-shell" v-if="transactionsDomain.pagedTransactions.value.length">
-      <table class="transactions-table">
-        <thead>
-        <tr><th>İşlem</th><th>Varlık</th><th>Miktar</th><th>Oluşturulma</th><th>İşlem Tarihi</th><th>Kur</th><th>Toplam</th><th></th></tr>
-        </thead>
-        <tbody>
-        <tr v-for="tx in transactionsDomain.pagedTransactions.value" :key="tx.id">
-          <td>
-            <div class="tx-type-wrap">
-              <span class="type-badge" :class="tx.type">{{ getTransactionTypeLabel(tx.type) }}</span>
-              <small>#{{ tx.id }}</small>
-            </div>
-          </td>
-          <td><span class="asset-badge">{{ tx.user_asset?.asset?.toUpperCase() || '-' }}</span></td>
-          <td>{{ formatNumber(tx.amount, 4) }}</td>
-          <td>{{ formatDate(tx.created_at, { includeSeconds: false }) }}</td>
-          <td>{{ formatDate(tx.transaction_date, { includeSeconds: false }) }}</td>
-          <td>{{ formatNumber(tx.target_currency_price) }}</td>
-          <td class="total-cell">{{ formatNumber(tx.target_currency_total_price) }} {{ tx.now_target_currency?.toUpperCase() }}</td>
-          <td><button class="secondary" @click="transactionsDomain.downloadTxPdf(tx.id)">PDF</button></td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
+    <template v-else>
+      <p class="subtle" v-if="transactionsDomain.pagedTransactions.value.length">
+        Toplam sonuç: {{ transactionsDomain.filteredTransactions.value.length }}
+      </p>
 
-    <div class="tx-mobile-cards" v-if="transactionsDomain.pagedTransactions.value.length">
-      <article class="tx-card" v-for="tx in transactionsDomain.pagedTransactions.value" :key="`mobile-${tx.id}`">
-        <div class="tx-card-top">
-          <span class="type-badge" :class="tx.type">{{ getTransactionTypeLabel(tx.type) }}</span>
-          <span class="asset-badge">{{ tx.user_asset?.asset?.toUpperCase() || '-' }}</span>
-        </div>
-        <strong>{{ formatNumber(tx.target_currency_total_price) }} {{ tx.now_target_currency?.toUpperCase() }}</strong>
-        <p>Miktar: {{ formatNumber(tx.amount, 4) }}</p>
-        <p>İşlem: {{ formatDate(tx.transaction_date, { includeSeconds: false }) }}</p>
-        <p>Oluşturulma: {{ formatDate(tx.created_at, { includeSeconds: false }) }}</p>
-        <button class="secondary" @click="transactionsDomain.downloadTxPdf(tx.id)">PDF İndir</button>
-      </article>
-    </div>
+      <div class="table-shell" v-if="transactionsDomain.pagedTransactions.value.length">
+        <table class="transactions-table">
+          <thead>
+          <tr>
+            <th>İşlem</th>
+            <th>Varlık</th>
+            <th>Miktar</th>
+            <th>Oluşturulma</th>
+            <th>İşlem Tarihi</th>
+            <th>Kur</th>
+            <th class="align-right">Toplam</th>
+            <th class="align-right">Belge</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr v-for="tx in transactionsDomain.pagedTransactions.value" :key="tx.id">
+            <td>
+              <div class="tx-type-wrap">
+                <span class="type-badge" :class="tx.type">{{ getTransactionTypeLabel(tx.type) }}</span>
+                <small>#{{ tx.id }}</small>
+              </div>
+            </td>
+            <td><span class="asset-badge">{{ tx.user_asset?.asset?.toUpperCase() || '-' }}</span></td>
+            <td>{{ formatNumber(tx.amount, 4) }}</td>
+            <td>{{ formatDate(tx.created_at, { includeSeconds: false }) }}</td>
+            <td>{{ formatDate(tx.transaction_date, { includeSeconds: false }) }}</td>
+            <td>{{ formatNumber(tx.target_currency_price) }}</td>
+            <td class="total-cell align-right">{{ formatNumber(tx.target_currency_total_price) }} {{ tx.now_target_currency?.toUpperCase() }}</td>
+            <td class="align-right">
+              <button class="secondary pdf-action" @click="transactionsDomain.downloadTxPdf(tx.id)">PDF</button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
 
-    <p v-else class="subtle">İşlem bulunamadı.</p>
+      <div class="tx-mobile-cards" v-if="transactionsDomain.pagedTransactions.value.length">
+        <article class="tx-card" v-for="tx in transactionsDomain.pagedTransactions.value" :key="`mobile-${tx.id}`">
+          <div class="tx-card-top">
+            <span class="type-badge" :class="tx.type">{{ getTransactionTypeLabel(tx.type) }}</span>
+            <span class="asset-badge">{{ tx.user_asset?.asset?.toUpperCase() || '-' }}</span>
+          </div>
+          <strong>{{ formatNumber(tx.target_currency_total_price) }} {{ tx.now_target_currency?.toUpperCase() }}</strong>
+          <p>Miktar: {{ formatNumber(tx.amount, 4) }}</p>
+          <p>İşlem: {{ formatDate(tx.transaction_date, { includeSeconds: false }) }}</p>
+          <p>Oluşturulma: {{ formatDate(tx.created_at, { includeSeconds: false }) }}</p>
+          <button class="secondary" @click="transactionsDomain.downloadTxPdf(tx.id)">PDF İndir</button>
+        </article>
+      </div>
+
+      <div v-else class="empty-state">
+        <h3>Filtreye uygun işlem bulunamadı</h3>
+        <p>Tarih, varlık veya arama filtresini sadeleştirerek tekrar deneyin.</p>
+        <button class="secondary" @click="clearFilters">Filtreleri Temizle</button>
+      </div>
+    </template>
 
     <div class="pager" v-if="transactionsDomain.totalPages.value > 1">
       <button :disabled="transactionsDomain.filters.page <= 1" @click="transactionsDomain.setPage(transactionsDomain.filters.page - 1)">Önceki</button>
@@ -157,6 +179,16 @@ function getTransactionTypeLabel(type) {
   if (type === 'subtract') return 'Çıkarma'
   return type || '-'
 }
+
+function clearFilters() {
+  props.transactionsDomain.filters.asset = ''
+  props.transactionsDomain.filters.type = ''
+  props.transactionsDomain.filters.search = ''
+  props.transactionsDomain.filters.dateFrom = ''
+  props.transactionsDomain.filters.dateTo = ''
+  props.transactionsDomain.setPage(1)
+  props.transactionsDomain.fetchTransactions()
+}
 </script>
 
 <style scoped>
@@ -171,11 +203,21 @@ h3 { margin: 0 0 .55rem; font-size: .95rem; }
 .filters-toolbar {
   display: grid;
   grid-template-columns: repeat(8, minmax(120px, 1fr));
-  gap: .5rem;
+  gap: .62rem;
   align-items: center;
 }
 .filter-search {
   grid-column: span 2;
+}
+.list-loading {
+  border: 1px solid #d9e5f6;
+  border-radius: 12px;
+  padding: .78rem;
+  background: #f8fbff;
+}
+.list-loading p {
+  margin-top: .2rem;
+  color: var(--color-muted);
 }
 .table-shell { overflow-x: auto; }
 .transactions-table { min-width: 940px; }
@@ -219,9 +261,35 @@ h3 { margin: 0 0 .55rem; font-size: .95rem; }
   font-weight: 700;
   font-size: .74rem;
 }
+.align-right {
+  text-align: right;
+}
 .total-cell {
   color: #0f2f73;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: .01em;
+}
+.pdf-action {
+  padding: .38rem .58rem;
+  font-size: .74rem;
+}
+.empty-state {
+  border: 1px dashed #c9d9f4;
+  border-radius: 12px;
+  padding: .95rem;
+  background: #f9fbff;
+  display: grid;
+  gap: .42rem;
+}
+.empty-state h3 {
+  margin: 0;
+  font-size: .98rem;
+}
+.empty-state p {
+  color: #64748b;
+}
+.empty-state button {
+  width: fit-content;
 }
 .pager {
   display: flex;

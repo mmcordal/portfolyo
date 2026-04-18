@@ -5,6 +5,7 @@ import { createStatusState, clearStatus, setError, setOk, toTimestamp } from './
 export function useDashboardTransactions(currency) {
     const transactions = ref([])
     const loading = ref(false)
+    const listLoading = ref(false)
     const status = createStatusState()
 
     const txForm = reactive({
@@ -95,6 +96,7 @@ export function useDashboardTransactions(currency) {
 
     async function fetchTransactions() {
         try {
+            listLoading.value = true
             const res = filters.asset
                 ? await transactionService.getByAsset(filters.asset, currency.value)
                 : await transactionService.getAll(currency.value)
@@ -102,6 +104,8 @@ export function useDashboardTransactions(currency) {
             filters.page = 1
         } catch (err) {
             setError(status, err)
+        } finally {
+            listLoading.value = false
         }
     }
 
@@ -159,6 +163,7 @@ export function useDashboardTransactions(currency) {
         txForm,
         filters,
         loading,
+        listLoading,
         status,
         setPerPage,
         setPage,

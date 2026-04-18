@@ -45,8 +45,6 @@ export function useDashboardProfile(userStore) {
     }
 
     async function deleteProfile() {
-        if (!window.confirm('Hesabınızı silmek istediğinize emin misiniz?')) return
-
         try {
             loading.value = true
             clearStatus(status)

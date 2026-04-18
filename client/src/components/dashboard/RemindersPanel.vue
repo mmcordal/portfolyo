@@ -7,7 +7,12 @@
     <StatusBanner type="error" :message="remindersDomain.status.error" />
     <StatusBanner type="ok" :message="remindersDomain.status.ok" />
 
-    <ul class="list" v-if="remindersDomain.reminders.value.length">
+    <section v-if="remindersDomain.loading.value && !remindersDomain.reminders.value.length" class="panel-loading" aria-live="polite">
+      <strong>Hatırlatıcılar yükleniyor...</strong>
+      <p>Planlarınız hazırlanıyor.</p>
+    </section>
+
+    <ul class="list" v-else-if="remindersDomain.reminders.value.length">
       <li v-for="r in remindersDomain.reminders.value" :key="r.id" class="reminder-item">
         <div class="reminder-content">
           <strong>{{ r.title }}</strong>
@@ -15,11 +20,14 @@
         </div>
         <div class="reminder-actions">
           <span class="tag" :class="getReminderMeta(r.date).tone">{{ getReminderMeta(r.date).label }}</span>
-          <button class="danger ghost" @click="remindersDomain.deleteReminder(r.id)">Sil</button>
+          <button class="danger ghost" @click="openDeleteConfirm(r)">Sil</button>
         </div>
       </li>
     </ul>
-    <p v-else class="subtle">Hatırlatıcı bulunamadı.</p>
+    <div v-else class="empty-state">
+      <h3>Henüz hatırlatıcı yok</h3>
+      <p>Ödeme veya yatırım planlarınızı takip etmek için ilk hatırlatıcıyı ekleyin.</p>
+    </div>
 
     <div v-if="showCreateModal" class="overlay" @click.self="closeCreateModal">
       <section class="modal-card reminder-modal">
@@ -35,11 +43,32 @@
         </form>
       </section>
     </div>
+
+    <div v-if="deleteConfirm.target" class="overlay" @click.self="closeDeleteConfirm">
+      <section class="modal-card confirm-modal">
+        <div class="modal-head">
+          <h3>Hatırlatıcıyı Sil</h3>
+          <button class="secondary" @click="closeDeleteConfirm">Kapat</button>
+        </div>
+
+        <p>
+          <strong>{{ deleteConfirm.target.title }}</strong> başlıklı hatırlatıcı kalıcı olarak silinecek.
+          Bu işlem geri alınamaz.
+        </p>
+
+        <div class="modal-actions">
+          <button class="secondary" @click="closeDeleteConfirm">Vazgeç</button>
+          <button class="danger" :disabled="deleteConfirm.loading" @click="confirmDeleteReminder">
+            {{ deleteConfirm.loading ? 'Siliniyor...' : 'Evet, Sil' }}
+          </button>
+        </div>
+      </section>
+    </div>
   </AppCard>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import AppCard from '../ui/AppCard.vue'
 import StatusBanner from '../ui/StatusBanner.vue'
 import { formatDate } from '../../utils/format'
@@ -51,6 +80,10 @@ const props = defineProps({
 
 const emit = defineEmits(['close-create'])
 const showCreateModal = ref(false)
+const deleteConfirm = reactive({
+  target: null,
+  loading: false,
+})
 
 watch(() => props.openCreate, (next) => {
   showCreateModal.value = next
@@ -65,6 +98,29 @@ async function submitReminder() {
   await props.remindersDomain.createReminder()
   if (!props.remindersDomain.status.error) {
     closeCreateModal()
+  }
+}
+
+function openDeleteConfirm(reminder) {
+  deleteConfirm.target = reminder
+}
+
+function closeDeleteConfirm() {
+  if (deleteConfirm.loading) return
+  deleteConfirm.target = null
+}
+
+async function confirmDeleteReminder() {
+  if (!deleteConfirm.target) return
+
+  try {
+    deleteConfirm.loading = true
+    await props.remindersDomain.deleteReminder(deleteConfirm.target.id)
+    if (!props.remindersDomain.status.error) {
+      closeDeleteConfirm()
+    }
+  } finally {
+    deleteConfirm.loading = false
   }
 }
 
@@ -84,6 +140,16 @@ function getReminderMeta(dateValue) {
 <style scoped>
 h3 { margin: 0 0 .55rem; font-size: .95rem; }
 .subtle { color: var(--color-muted); }
+.panel-loading {
+  border: 1px solid #d9e5f6;
+  border-radius: 12px;
+  padding: .78rem;
+  background: #f8fbff;
+}
+.panel-loading p {
+  margin-top: .2rem;
+  color: var(--color-muted);
+}
 .reminder-item {
   background: linear-gradient(180deg, #ffffff, #f8fbff);
 }
@@ -121,10 +187,41 @@ h3 { margin: 0 0 .55rem; font-size: .95rem; }
   align-items: center;
   margin-bottom: .7rem;
 }
+.confirm-modal p {
+  color: #334155;
+  line-height: 1.5;
+}
+.modal-actions {
+  margin-top: .8rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+}
+.empty-state {
+  border: 1px dashed #c9d9f4;
+  border-radius: 12px;
+  padding: .95rem;
+  background: #f9fbff;
+}
+.empty-state h3 {
+  margin: 0;
+  font-size: .98rem;
+}
+.empty-state p {
+  margin-top: .28rem;
+  color: #64748b;
+}
 @media (max-width: 760px) {
   .reminder-actions {
     width: 100%;
     justify-content: space-between;
+  }
+  .modal-actions {
+    justify-content: stretch;
+    flex-direction: column-reverse;
+  }
+  .modal-actions button {
+    width: 100%;
   }
 }
 </style>

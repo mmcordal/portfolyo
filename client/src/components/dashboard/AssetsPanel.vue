@@ -1,72 +1,79 @@
 <template>
-  <AppCard title="Portföy" subtitle="Varlık dağılımını güçlü görsel hiyerarşi ile izleyin">
+  <AppCard title="Portföy" subtitle="Varlık dağılımını sade ve okunabilir bir görünümle takip edin">
     <StatusBanner type="error" :message="assets.status.error" />
     <StatusBanner type="ok" :message="assets.status.ok" />
 
-    <p class="summary" v-if="assets.assetsAll.value">
-      Toplam: {{ formatNumber(assets.assetsAll.value.total_price) }} {{ assets.assetsAll.value.currency?.toUpperCase() }}
-    </p>
-
-    <div class="charts" v-if="hasAssets">
-      <div class="chart-box donut-box">
-        <h3>Dağılım (Donut)</h3>
-        <div class="donut-wrap">
-          <Pie :data="pieData" :options="donutOptions" />
-          <div class="donut-center">
-            <span>Toplam</span>
-            <strong>{{ formatNumber(assets.assetsAll.value?.total_price || 0) }}</strong>
-            <small>{{ assets.assetsAll.value?.currency?.toUpperCase() }}</small>
-          </div>
-        </div>
-      </div>
-      <div class="chart-box">
-        <h3>Varlık Değerleri</h3>
-        <Bar :data="barData" :options="barOptions" />
-      </div>
-    </div>
-
-    <section class="holding-cards" v-if="hasAssets">
-      <article class="holding-card" v-for="asset in assets.assetsAll.value.assets" :key="asset.id">
-        <div class="holding-head">
-          <strong>{{ asset.asset.toUpperCase() }}</strong>
-          <span>{{ formatRatio(asset) }}%</span>
-        </div>
-        <p>{{ formatNumber(asset.amount, 4) }} adet · {{ formatNumber(asset.price) }} birim</p>
-        <p class="holding-total">{{ formatNumber(asset.total_price_by_asset) }} {{ assets.assetsAll.value.currency?.toUpperCase() }}</p>
-        <div class="progress-track">
-          <div class="progress-fill" :style="{ width: `${Math.min(100, formatRatio(asset))}%` }" />
-        </div>
-      </article>
+    <section v-if="assets.loading.value" class="panel-loading" aria-live="polite">
+      <strong>Portföy yükleniyor...</strong>
+      <p>Dağılım grafikleri ve varlık detayları hazırlanıyor.</p>
     </section>
 
-    <table v-if="hasAssets">
-      <thead><tr><th>Varlık</th><th>Miktar</th><th>Birim</th><th>Toplam</th><th></th></tr></thead>
-      <tbody>
-      <tr v-for="asset in assets.assetsAll.value.assets" :key="asset.id">
-        <td>{{ asset.asset.toUpperCase() }}</td>
-        <td>{{ formatNumber(asset.amount, 4) }}</td>
-        <td>{{ formatNumber(asset.price) }}</td>
-        <td>{{ formatNumber(asset.total_price_by_asset) }}</td>
-        <td><button class="secondary" @click="assets.fetchSingleAsset(asset.asset)">Detay</button></td>
-      </tr>
-      </tbody>
-    </table>
-    <div v-else class="empty-state">
-      <h3>Henüz portföy verisi yok</h3>
-      <p>Yeni bir işlem eklediğinizde varlık dağılımı burada görünecek.</p>
-    </div>
+    <template v-else>
+      <div class="charts" v-if="hasAssets">
+        <div class="chart-box donut-box">
+          <h3>Dağılım (Donut)</h3>
+          <div class="donut-wrap">
+            <Pie :data="pieData" :options="donutOptions" />
+            <div class="donut-center">
+              <span>Toplam Portföy</span>
+              <strong>{{ formatNumber(assets.assetsAll.value?.total_price || 0) }}</strong>
+              <small>{{ assets.assetsAll.value?.currency?.toUpperCase() }}</small>
+            </div>
+          </div>
+        </div>
+        <div class="chart-box">
+          <h3>Varlık Değerleri</h3>
+          <Bar :data="barData" :options="barOptions" />
+        </div>
+      </div>
 
-    <div class="asset-detail" v-if="assets.singleAsset.value">
-      <h3>{{ assets.singleAsset.value.asset.toUpperCase() }} Detayı</h3>
-      <p>{{ formatNumber(assets.singleAsset.value.total_price_by_asset) }} {{ assets.singleAsset.value.target_currency?.toUpperCase() }}</p>
-      <ul class="list" v-if="assets.singleAsset.value.transactions?.length">
-        <li v-for="tx in assets.singleAsset.value.transactions" :key="tx.id">
-          <span>{{ tx.type }}</span>
-          <span>{{ formatNumber(tx.amount, 4) }}</span>
-          <span>{{ formatDate(tx.transaction_date) }}</span>
-        </li>
-      </ul>
-    </div>
+      <section class="holding-cards" v-if="hasAssets">
+        <article class="holding-card" v-for="asset in assets.assetsAll.value.assets" :key="asset.id">
+          <div class="holding-head">
+            <strong>{{ asset.asset.toUpperCase() }}</strong>
+            <span>{{ formatRatio(asset) }}%</span>
+          </div>
+          <p>{{ formatNumber(asset.amount, 4) }} adet · {{ formatNumber(asset.price) }} birim</p>
+          <p class="holding-total">{{ formatNumber(asset.total_price_by_asset) }} {{ assets.assetsAll.value.currency?.toUpperCase() }}</p>
+          <div class="progress-track">
+            <div class="progress-fill" :style="{ width: `${Math.min(100, formatRatio(asset))}%` }" />
+          </div>
+        </article>
+      </section>
+
+      <details class="asset-table-collapse" v-if="hasAssets">
+        <summary>Detay tablosu ({{ assets.assetsAll.value.assets.length }} varlık)</summary>
+        <table>
+          <thead><tr><th>Varlık</th><th>Miktar</th><th>Birim</th><th>Toplam</th><th></th></tr></thead>
+          <tbody>
+          <tr v-for="asset in assets.assetsAll.value.assets" :key="asset.id">
+            <td>{{ asset.asset.toUpperCase() }}</td>
+            <td>{{ formatNumber(asset.amount, 4) }}</td>
+            <td>{{ formatNumber(asset.price) }}</td>
+            <td>{{ formatNumber(asset.total_price_by_asset) }}</td>
+            <td><button class="secondary" @click="assets.fetchSingleAsset(asset.asset)">Detay</button></td>
+          </tr>
+          </tbody>
+        </table>
+      </details>
+
+      <div v-else class="empty-state">
+        <h3>Henüz portföy verisi yok</h3>
+        <p>Yeni bir işlem eklediğinizde varlık dağılımı, kartlar ve grafikler burada görünecek.</p>
+      </div>
+
+      <div class="asset-detail" v-if="assets.singleAsset.value">
+        <h3>{{ assets.singleAsset.value.asset.toUpperCase() }} Detayı</h3>
+        <p>{{ formatNumber(assets.singleAsset.value.total_price_by_asset) }} {{ assets.singleAsset.value.target_currency?.toUpperCase() }}</p>
+        <ul class="list" v-if="assets.singleAsset.value.transactions?.length">
+          <li v-for="tx in assets.singleAsset.value.transactions" :key="tx.id">
+            <span>{{ tx.type }}</span>
+            <span>{{ formatNumber(tx.amount, 4) }}</span>
+            <span>{{ formatDate(tx.transaction_date) }}</span>
+          </li>
+        </ul>
+      </div>
+    </template>
   </AppCard>
 </template>
 
@@ -202,6 +209,17 @@ const barOptions = computed(() => ({
 </script>
 
 <style scoped>
+.panel-loading {
+  border: 1px solid #d7e4f8;
+  border-radius: 12px;
+  padding: .78rem;
+  background: #f8fbff;
+  margin-bottom: .75rem;
+}
+.panel-loading p {
+  margin-top: .24rem;
+  color: var(--color-muted);
+}
 .asset-detail {
   margin-top: .8rem;
   padding-top: .8rem;
@@ -295,6 +313,19 @@ const barOptions = computed(() => ({
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, #2563eb, #60a5fa);
+}
+.asset-table-collapse {
+  border: 1px solid #dce7f9;
+  border-radius: 12px;
+  padding: .55rem .62rem .62rem;
+  margin-bottom: .78rem;
+  background: #fbfdff;
+}
+.asset-table-collapse summary {
+  cursor: pointer;
+  color: #334155;
+  font-weight: 600;
+  margin-bottom: .45rem;
 }
 .empty-state {
   border: 1px dashed #c9d9f4;

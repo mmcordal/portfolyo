@@ -10,10 +10,13 @@ export function useDashboardReminders() {
 
     async function fetchReminders() {
         try {
+            loading.value = true
             const res = await reminderService.getAll()
             reminders.value = res.data || []
         } catch (err) {
             setError(status, err)
+        } finally {
+            loading.value = false
         }
     }
 
@@ -38,12 +41,15 @@ export function useDashboardReminders() {
 
     async function deleteReminder(id) {
         try {
+            loading.value = true
             clearStatus(status)
             await reminderService.remove(id)
             setOk(status, 'Hatırlatıcı silindi.')
             await fetchReminders()
         } catch (err) {
             setError(status, err)
+        } finally {
+            loading.value = false
         }
     }
 

@@ -79,8 +79,9 @@ onMounted(async () => {
 }
 .profile-layout {
   display: grid;
-  grid-template-columns: minmax(220px, .85fr) minmax(0, 1.7fr);
+  grid-template-columns: minmax(260px, .9fr) minmax(0, 1.65fr);
   gap: .95rem;
+  align-items: start;
 }
 .user-summary {
   display: flex;
@@ -114,8 +115,8 @@ onMounted(async () => {
   gap: .5rem;
   border: 1px solid #dbe6f7;
   border-radius: 10px;
-  padding: .6rem;
-  background: #fbfdff;
+  padding: .64rem;
+  background: linear-gradient(180deg, #ffffff, #f9fcff);
 }
 .summary-list span {
   color: #64748b;
