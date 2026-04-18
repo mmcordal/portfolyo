@@ -16,20 +16,6 @@
           </strong>
         </article>
 
-        <div class="hero-metrics">
-          <article>
-            <span>Varlık Sayısı</span>
-            <strong>{{ assets.assetsAll.value?.assets?.length || 0 }}</strong>
-          </article>
-          <article>
-            <span>Toplam İşlem</span>
-            <strong>{{ transactions.transactions.length }}</strong>
-          </article>
-          <article>
-            <span>Yaklaşan Hatırlatıcı</span>
-            <strong>{{ upcomingReminderCount }}</strong>
-          </article>
-        </div>
       </div>
 
       <div class="hero-actions-panel">
@@ -42,10 +28,6 @@
         <button @click="isTxModalOpen = true">+ Yeni İşlem</button>
         <button class="secondary" @click="isReminderModalOpen = true">+ Hatırlatıcı</button>
 
-        <div class="hero-badges">
-          <span>{{ assets.assetsAll.value?.assets?.length || 0 }} varlık</span>
-          <span>{{ reminders.reminders.value.length }} hatırlatıcı</span>
-        </div>
       </div>
     </section>
 
@@ -56,7 +38,7 @@
       </article>
       <article class="summary-card">
         <p><span class="card-icon">🧾</span> Toplam İşlem</p>
-        <strong>{{ transactions.transactions.length }}</strong>
+        <strong>{{ totalTransactionCount }}</strong>
       </article>
       <article class="summary-card">
         <p><span class="card-icon">⏰</span> Yaklaşan Hatırlatıcı</p>
@@ -127,6 +109,9 @@ const upcomingReminderCount = computed(() => reminders.reminders.value.filter((i
   const timestamp = new Date(item.date).getTime()
   return Number.isFinite(timestamp) && timestamp >= Date.now()
 }).length)
+const totalTransactionCount = computed(() => (
+    Array.isArray(transactions.transactions.value) ? transactions.transactions.value.length : 0
+))
 
 async function handleCreateTransaction(onSuccessClose) {
   await createTransaction()
@@ -191,29 +176,6 @@ onMounted(async () => {
   color: #0f2f73;
   font-size: 1.2rem;
 }
-.hero-metrics {
-  margin-top: .65rem;
-  display: grid;
-  gap: .58rem;
-  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
-}
-.hero-metrics article {
-  border: 1px solid #d6e3fa;
-  border-radius: 12px;
-  padding: .62rem .7rem;
-  background: #ffffff;
-}
-.hero-metrics span {
-  display: block;
-  color: #64748b;
-  font-size: .76rem;
-}
-.hero-metrics strong {
-  display: block;
-  margin-top: .24rem;
-  color: #0f2f73;
-  font-size: 1.02rem;
-}
 .hero-actions-panel {
   border: 1px solid #d7e3f8;
   border-radius: 14px;
@@ -222,21 +184,6 @@ onMounted(async () => {
   display: grid;
   gap: .52rem;
   align-content: start;
-}
-.hero-actions-panel .hero-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .4rem;
-  margin-top: .1rem;
-}
-.hero-badges span {
-  border: 1px solid #cad8f2;
-  background: rgba(255, 255, 255, 0.86);
-  border-radius: 999px;
-  padding: .3rem .62rem;
-  font-size: .76rem;
-  color: #1e3a8a;
-  font-weight: 600;
 }
 .summary-cards {
   display: grid;

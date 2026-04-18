@@ -15,14 +15,14 @@
         <input v-model="profileDomain.form.surname" placeholder="Yeni soyad" />
       </div>
       <input v-model="profileDomain.form.email" type="email" placeholder="Yeni e-posta" />
-      <button :disabled="profileDomain.loading.value">{{ profileDomain.loading.value ? 'Kaydediliyor...' : 'Profili Güncelle' }}</button>
+      <button type="submit" :disabled="profileDomain.loading.value">{{ profileDomain.loading.value ? 'Kaydediliyor...' : 'Profili Güncelle' }}</button>
     </form>
 
     <form class="inline-form section-card security-card" @submit.prevent="profileDomain.updateProfile">
       <h3>Güvenlik</h3>
       <p>Hesap güvenliğinizi artırmak için şifrenizi düzenli aralıklarla güncelleyin.</p>
       <input v-model="profileDomain.form.password" type="password" placeholder="Yeni şifre" />
-      <button class="secondary" :disabled="profileDomain.loading.value">{{ profileDomain.loading.value ? 'Kaydediliyor...' : 'Şifreyi Güncelle' }}</button>
+      <button type="submit" class="secondary" :disabled="profileDomain.loading.value">{{ profileDomain.loading.value ? 'Kaydediliyor...' : 'Şifre Güncelle' }}</button>
     </form>
 
     <section class="danger-zone">
