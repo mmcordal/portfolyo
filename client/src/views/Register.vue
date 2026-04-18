@@ -1,17 +1,22 @@
 <template>
   <section class="auth-container">
     <div class="auth-card">
-      <h2>Kayıt Ol</h2>
+      <p class="auth-eyebrow">Portfolyo</p>
+      <h1>Kayıt Ol</h1>
+      <p class="auth-subtitle">Dakikalar içinde hesabınızı oluşturun.</p>
       <form @submit.prevent="submit" class="inline-form auth-form">
         <input v-model="form.name" type="text" placeholder="Ad" required minlength="2" />
         <input v-model="form.surname" type="text" placeholder="Soyad" required minlength="2" />
-        <input v-model="form.email" type="email" placeholder="E-posta" required />
-        <input v-model="form.password" type="password" placeholder="Şifre" required minlength="8" />
+        <input v-model="form.email" type="email" placeholder="E-posta adresiniz" required />
+        <input v-model="form.password" type="password" placeholder="En az 8 karakter şifre" required minlength="8" />
         <button type="submit" :disabled="loading">{{ loading ? 'Kaydediliyor...' : 'Kayıt Ol' }}</button>
       </form>
       <p class="ok auth-feedback" v-if="success">{{ success }}</p>
       <p class="error auth-feedback" v-if="error">{{ error }}</p>
-      <router-link to="/login" class="auth-link">Hesabın var mı? Giriş yap.</router-link>
+      <p class="auth-switch">
+        Hesabın var mı?
+        <router-link to="/login" class="auth-link">Giriş yap</router-link>
+      </p>
     </div>
   </section>
 </template>

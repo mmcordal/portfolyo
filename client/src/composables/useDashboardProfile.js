@@ -19,7 +19,11 @@ export function useDashboardProfile(userStore) {
             loading.value = true
             clearStatus(status)
             const payload = Object.fromEntries(
-                Object.entries(form).filter(([, value]) => String(value || '').trim() !== ''),
+                Object.entries({
+                    name: form.name,
+                    surname: form.surname,
+                    email: form.email,
+                }).filter(([, value]) => String(value || '').trim() !== ''),
             )
 
             if (!Object.keys(payload).length) {
@@ -33,10 +37,30 @@ export function useDashboardProfile(userStore) {
                 name: '',
                 surname: '',
                 email: payload.email || form.email,
-                password: '',
             })
 
             await fetchProfile()
+        } catch (err) {
+            setError(status, err)
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function updatePassword() {
+        try {
+            loading.value = true
+            clearStatus(status)
+            const password = String(form.password || '').trim()
+
+            if (!password) {
+                setOk(status, 'Lütfen yeni şifreyi girin.')
+                return
+            }
+
+            await authService.updateMe({ password })
+            setOk(status, 'Şifreniz güncellendi.')
+            form.password = ''
         } catch (err) {
             setError(status, err)
         } finally {
@@ -63,6 +87,7 @@ export function useDashboardProfile(userStore) {
         status,
         fetchProfile,
         updateProfile,
+        updatePassword,
         deleteProfile,
     }
 }

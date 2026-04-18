@@ -18,11 +18,11 @@
       <button type="submit" :disabled="profileDomain.loading.value">{{ profileDomain.loading.value ? 'Kaydediliyor...' : 'Profili Güncelle' }}</button>
     </form>
 
-    <form class="inline-form section-card security-card" @submit.prevent="profileDomain.updateProfile">
+    <form class="inline-form section-card security-card" @submit.prevent="profileDomain.updatePassword">
       <h3>Güvenlik</h3>
       <p>Hesap güvenliğinizi artırmak için şifrenizi düzenli aralıklarla güncelleyin.</p>
       <input v-model="profileDomain.form.password" type="password" placeholder="Yeni şifre" />
-      <button type="submit" class="secondary" :disabled="profileDomain.loading.value">{{ profileDomain.loading.value ? 'Kaydediliyor...' : 'Şifre Güncelle' }}</button>
+      <button type="submit" class="secondary security-submit" :disabled="profileDomain.loading.value">{{ profileDomain.loading.value ? 'Kaydediliyor...' : 'Şifre Güncelle' }}</button>
     </form>
 
     <section class="danger-zone">
@@ -118,6 +118,9 @@ async function confirmDeleteProfile() {
 }
 .security-card {
   background: linear-gradient(180deg, #ffffff, #f8fbff);
+}
+.security-submit {
+  align-self: start;
 }
 .form-grid {
   display: grid;
