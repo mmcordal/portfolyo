@@ -58,6 +58,7 @@ func (r *reminderRepository) GetAll(ctx context.Context, userID int64) ([]*model
 		Model(&reminde).
 		Where("user_id = ?", userID).
 		Relation("User").
+		Order("created_at DESC").
 		Scan(ctx)
 	return reminde, err
 
