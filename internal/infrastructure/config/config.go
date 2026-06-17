@@ -41,13 +41,13 @@ type RedisConfig struct {
 func setDefaults() {
 	viper.SetDefault("database.name", "portfolyo_db")
 	viper.SetDefault("database.username", "mcordal")
-	viper.SetDefault("database.password", "157595355")
+	viper.SetDefault("database.password", "password") // kendi şifreniz
 	viper.SetDefault("database.host", "127.0.0.1")
 	viper.SetDefault("database.port", "5432")
 
 	viper.SetDefault("server.port", "3000")
 
-	viper.SetDefault("secret.jwtsecret", "mcordal123")
+	viper.SetDefault("secret.jwtsecret", "secret") // kendi secretiniz
 
 	viper.SetDefault("redis.host", "localhost")
 	viper.SetDefault("redis.port", "6379")
